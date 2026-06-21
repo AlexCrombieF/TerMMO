@@ -28,20 +28,20 @@ namespace Doodgy.Gameplay
         [Header("Content")]
         [SerializeField] private TileDatabase tileDatabase;
 
-        [Header("Flat test world")]
-        [Tooltip("World width/height in chunks. 4x2 == 128x64 tiles.")]
-        [SerializeField] private int worldChunksX = 4;
-        [SerializeField] private int worldChunksY = 2;
+        [Header("Procedural generation")]
+        [Tooltip("World size in chunks. Streaming comes later; for now the world " +
+                 "is a fixed rectangle generated up-front. 8x4 == 256x128 tiles.")]
+        [SerializeField] private int worldChunksX = 8;
+        [SerializeField] private int worldChunksY = 4;
 
-        [Tooltip("Tile id used for the top soil layer.")]
-        [SerializeField] private ushort surfaceTileId = 1;   // e.g. Dirt
-        [Tooltip("Tile id used below the soil layer.")]
-        [SerializeField] private ushort deepTileId = 2;      // e.g. Stone
+        [SerializeField] private WorldGenSettings genSettings;
 
-        [Tooltip("Height (in tiles, from y=0) of the solid ground surface.")]
-        [SerializeField] private int surfaceHeight = 40;
-        [Tooltip("How many tiles of soil sit on top of the deep layer.")]
-        [SerializeField] private int soilDepth = 6;
+        [Tooltip("World seed. Same seed + same settings == identical world.")]
+        [SerializeField] private int seed = 12345;
+        [Tooltip("If true, a random seed is chosen at startup (logged to Console).")]
+        [SerializeField] private bool randomizeSeed = false;
+
+        private IWorldGenerator _generator;
 
         private readonly Dictionary<Vector2Int, Chunk> _chunks = new Dictionary<Vector2Int, Chunk>();
         private readonly Dictionary<Vector2Int, ChunkRenderer> _renderers = new Dictionary<Vector2Int, ChunkRenderer>();
@@ -52,6 +52,8 @@ namespace Doodgy.Gameplay
 
         public TileDatabase Tiles => tileDatabase;
 
+        public int Seed => seed;
+
         private void Start()
         {
             if (tileDatabase == null)
@@ -59,7 +61,12 @@ namespace Doodgy.Gameplay
                 Debug.LogError("[World] No TileDatabase assigned.", this);
                 return;
             }
-            GenerateFlatTestWorld();
+            if (genSettings == null)
+            {
+                Debug.LogError("[World] No WorldGenSettings assigned.", this);
+                return;
+            }
+            GenerateWorld();
         }
 
         // ---------------------------------------------------------------- reads
@@ -124,42 +131,44 @@ namespace Doodgy.Gameplay
             return chunk;
         }
 
-        // ----------------------------------------------------- test world (step 2)
+        // ----------------------------------------------------- generation (step 3)
 
-        private void GenerateFlatTestWorld()
+        /// <summary>
+        /// (Re)builds the whole fixed-rectangle world from the procedural
+        /// generator. Exposed as a context-menu action so you can iterate on
+        /// WorldGenSettings while in Play mode. (Editor 'Regenerate' is intended
+        /// for Play mode — chunk GameObjects are runtime-only.)
+        /// </summary>
+        [ContextMenu("Regenerate World")]
+        public void GenerateWorld()
         {
-            int size = WorldConstants.ChunkSize;
+            ClearWorld();
 
+            if (randomizeSeed) seed = new System.Random().Next(int.MinValue, int.MaxValue);
+            _generator = new ProceduralWorldGenerator(genSettings, seed);
+
+            int size = WorldConstants.ChunkSize;
             for (int cy = 0; cy < worldChunksY; cy++)
             {
                 for (int cx = 0; cx < worldChunksX; cx++)
                 {
                     var cc = new Vector2Int(cx, cy);
                     Chunk chunk = CreateChunk(cc);
-
-                    // Fill: stone below, a band of soil on top, air above surface.
-                    int baseX = cx * size;
-                    int baseY = cy * size;
-                    for (int ly = 0; ly < size; ly++)
-                    {
-                        int worldY = baseY + ly;
-                        ushort id;
-                        if (worldY >= surfaceHeight) id = WorldConstants.AirTileId;
-                        else if (worldY >= surfaceHeight - soilDepth) id = surfaceTileId;
-                        else id = deepTileId;
-
-                        if (id == WorldConstants.AirTileId) continue;
-                        for (int lx = 0; lx < size; lx++)
-                            chunk.SetLocal(lx, ly, id);
-                    }
-                    chunk.ClearDirty(); // generated state is the baseline, not a player edit
-
+                    _generator.Generate(chunk);
                     _renderers[cc].RenderAll(chunk, tileDatabase, _resolver);
                 }
             }
 
-            Debug.Log($"[World] Generated flat test world: {worldChunksX}x{worldChunksY} chunks " +
-                      $"({worldChunksX * size}x{worldChunksY * size} tiles).");
+            Debug.Log($"[World] Generated {worldChunksX}x{worldChunksY} chunks " +
+                      $"({worldChunksX * size}x{worldChunksY * size} tiles), seed {seed}.");
+        }
+
+        private void ClearWorld()
+        {
+            foreach (ChunkRenderer rend in _renderers.Values)
+                if (rend != null) Destroy(rend.gameObject);
+            _chunks.Clear();
+            _renderers.Clear();
         }
     }
 }
