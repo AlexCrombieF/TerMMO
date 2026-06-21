@@ -1,0 +1,36 @@
+# Normalize line endings; treat Unity YAML + code as text
+* text=auto
+
+*.cs        text diff=csharp
+*.asmdef    text
+*.json      text
+*.md        text
+*.shader    text
+*.cginc     text
+*.hlsl      text
+
+# Unity YAML asset files — keep as text so diffs/merges work
+*.meta          text
+*.unity         text
+*.prefab        text
+*.asset         text
+*.mat           text
+*.anim          text
+*.controller    text
+*.scenetemplate text
+*.inputactions  text
+
+# Common binary assets (never try to diff/merge these)
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.psd  binary
+*.tga  binary
+*.wav  binary
+*.mp3  binary
+*.ogg  binary
+*.ttf  binary
+*.otf  binary
+*.fbx  binary
+*.dll  binary
