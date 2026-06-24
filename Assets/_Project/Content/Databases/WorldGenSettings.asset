@@ -22,14 +22,23 @@ MonoBehaviour:
   terrainOctaves: 4
   terrainLacunarity: 2
   terrainPersistence: 0.5
-  dirtDepth: 5
+  terrainRidge: 0.35
+  dirtDepth: 6
+  dirtDepthVariance: 3
   cavesEnabled: 1
-  caveFrequency: 0.07
+  caveFrequency: 0.05
   caveOctaves: 3
-  caveThreshold: 0.55
+  caveThreshold: 0.6
   caveMinDepthBelowSurface: 4
+  caveDepthBonus: 0.12
+  caveDepthFadeTiles: 90
+  wormCavesEnabled: 1
+  wormFrequency: 0.035
+  wormWidth: 0.055
   oreEnabled: 1
   oreFrequency: 0.14
   oreOctaves: 2
-  oreThreshold: 0.74
+  oreThreshold: 0.82
   oreMinDepthBelowSurface: 8
+  oreDepthBonus: 0.14
+  oreRichDepth: 120

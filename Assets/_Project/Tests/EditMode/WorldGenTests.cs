@@ -20,11 +20,15 @@ namespace Doodgy.Tests
             s.grassTileId = 4; s.dirtTileId = 1; s.stoneTileId = 2; s.oreTileId = 3;
             s.baseSurfaceHeight = 64; s.surfaceAmplitude = 14;
             s.terrainFrequency = 0.012f; s.terrainOctaves = 4;
-            s.terrainLacunarity = 2f; s.terrainPersistence = 0.5f; s.dirtDepth = 5;
-            s.cavesEnabled = true; s.caveFrequency = 0.07f; s.caveOctaves = 3;
-            s.caveThreshold = 0.55f; s.caveMinDepthBelowSurface = 4;
+            s.terrainLacunarity = 2f; s.terrainPersistence = 0.5f; s.terrainRidge = 0.35f;
+            s.dirtDepth = 6; s.dirtDepthVariance = 3;
+            s.cavesEnabled = true; s.caveFrequency = 0.05f; s.caveOctaves = 3;
+            s.caveThreshold = 0.6f; s.caveMinDepthBelowSurface = 4;
+            s.caveDepthBonus = 0.12f; s.caveDepthFadeTiles = 90;
+            s.wormCavesEnabled = true; s.wormFrequency = 0.035f; s.wormWidth = 0.055f;
             s.oreEnabled = true; s.oreFrequency = 0.14f; s.oreOctaves = 2;
-            s.oreThreshold = 0.74f; s.oreMinDepthBelowSurface = 8;
+            s.oreThreshold = 0.82f; s.oreMinDepthBelowSurface = 8;
+            s.oreDepthBonus = 0.14f; s.oreRichDepth = 120;
             return s;
         }
 
@@ -92,8 +96,11 @@ namespace Doodgy.Tests
         {
             var s = MakeSettings();
             s.surfaceAmplitude = 0;          // flat surface for a deterministic check
-            s.cavesEnabled = false;          // isolate the ore rule
+            s.cavesEnabled = false;          // isolate the ore rule (no cavern carving)
+            s.wormCavesEnabled = false;      // ...and no worm carving
+            s.dirtDepthVariance = 0;         // fixed dirt/stone boundary
             s.oreThreshold = 0f;             // ore noise always passes -> all stone becomes ore
+            s.oreDepthBonus = 0f;
             s.oreMinDepthBelowSurface = 0;
             s.dirtDepth = 10;
             s.grassTileId = s.dirtTileId;    // ignore the grass surface layer for this check

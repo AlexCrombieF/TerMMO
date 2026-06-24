@@ -30,27 +30,49 @@ namespace Doodgy.Data
         [Min(1)] public int terrainOctaves = 4;
         public float terrainLacunarity = 2f;
         [Range(0f, 1f)] public float terrainPersistence = 0.5f;
-        [Tooltip("Thickness of the dirt band below the surface; stone beneath.")]
-        [Min(0)] public int dirtDepth = 5;
+        [Tooltip("Extra sharp ridged detail for cliffs/ridges (0 = smooth hills).")]
+        [Range(0f, 1f)] public float terrainRidge = 0.35f;
 
-        [Header("Caves")]
+        [Header("Dirt / stone layering")]
+        [Tooltip("Average thickness of the dirt band below the surface; stone beneath.")]
+        [Min(0)] public int dirtDepth = 6;
+        [Tooltip("Random +/- variation of the dirt/stone boundary depth per column, " +
+                 "so the layers interlock instead of a flat cut.")]
+        [Min(0)] public int dirtDepthVariance = 3;
+
+        [Header("Caves — caverns (cheese)")]
         public bool cavesEnabled = true;
-        [Tooltip("Higher = smaller, more frequent caves.")]
-        public float caveFrequency = 0.07f;
+        [Tooltip("Higher = smaller, more frequent caverns.")]
+        public float caveFrequency = 0.05f;
         [Min(1)] public int caveOctaves = 3;
-        [Tooltip("Carve to air where cave noise exceeds this. Higher = fewer caves.")]
-        [Range(0f, 1f)] public float caveThreshold = 0.55f;
-        [Tooltip("Don't carve within this many tiles of the surface (keeps a crust).")]
+        [Tooltip("Carve to air where cavern noise exceeds this. Higher = fewer caves.")]
+        [Range(0f, 1f)] public float caveThreshold = 0.6f;
+        [Tooltip("Keep a solid crust this many tiles below the surface.")]
         [Min(0)] public int caveMinDepthBelowSurface = 4;
+        [Tooltip("Caves open up with depth: the threshold is eased by this much...")]
+        [Range(0f, 0.5f)] public float caveDepthBonus = 0.12f;
+        [Tooltip("...reaching the full bonus this many tiles down.")]
+        [Min(1)] public int caveDepthFadeTiles = 90;
+
+        [Header("Caves — winding tunnels (worms)")]
+        public bool wormCavesEnabled = true;
+        [Tooltip("Lower = longer, smoother tunnels.")]
+        public float wormFrequency = 0.035f;
+        [Tooltip("Half-width of the tunnel carve band. Bigger = wider tunnels.")]
+        [Range(0.01f, 0.2f)] public float wormWidth = 0.055f;
 
         [Header("Ore veins")]
         public bool oreEnabled = true;
         [Tooltip("Higher = smaller, more scattered veins.")]
         public float oreFrequency = 0.14f;
         [Min(1)] public int oreOctaves = 2;
-        [Tooltip("Place ore where ore noise exceeds this. Higher = rarer ore.")]
-        [Range(0f, 1f)] public float oreThreshold = 0.74f;
+        [Tooltip("Base ore threshold near the top (higher = rarer).")]
+        [Range(0f, 1f)] public float oreThreshold = 0.82f;
         [Tooltip("Ore only spawns at least this deep below the surface.")]
         [Min(0)] public int oreMinDepthBelowSurface = 8;
+        [Tooltip("Ore gets richer with depth: threshold eased by this much...")]
+        [Range(0f, 0.5f)] public float oreDepthBonus = 0.14f;
+        [Tooltip("...reaching full richness this many tiles down.")]
+        [Min(1)] public int oreRichDepth = 120;
     }
 }
