@@ -6,15 +6,19 @@ using Doodgy.Data;
 namespace Doodgy.Gameplay
 {
     /// <summary>
-    /// Turns mouse input into validated tile-edit INTENTS:
-    ///   - Left click  -> mine  (set target tile to air)
-    ///   - Right click -> place (put the selected tile if the target is empty)
+    /// Turns mouse input into validated tile-edit INTENTS, originating from the
+    /// player (attach this to the player GameObject):
+    ///   - Hold left  -> mine the targeted tile (progress scales with hardness /
+    ///                   mining power; gated by tool type + tier).
+    ///   - Right click -> place the selected tile into an empty, in-reach cell.
     ///
-    /// This is the client-side intent producer. It validates locally (reach,
-    /// occupancy) and then calls the authoritative <see cref="World.SetTile"/>.
-    /// When netcode arrives, this same TryMine/TryPlace logic moves server-side:
-    /// the client sends "I want to mine (x,y)", the server re-runs these checks,
-    /// and only the server touches World. Tool/hardness gating is added in step 4.
+    /// Client-side intent producer: validates locally (reach, occupancy, tool),
+    /// then calls the authoritative <see cref="World.SetTile"/>. Under netcode the
+    /// same TryMine/TryPlace checks run server-side; the client just requests.
+    ///
+    /// TOOL SOURCE: tool type/tier/power are serialized here for now. Once the
+    /// inventory exists (step 5) these read from the equipped/held tool's ItemData
+    /// instead — swap <see cref="_toolType"/> etc. for the held item's fields.
     /// </summary>
     public sealed class WorldEditController : MonoBehaviour
     {
@@ -26,15 +30,28 @@ namespace Doodgy.Gameplay
         [SerializeField] private TileData placeTile;
 
         [Header("Reach")]
-        [Tooltip("Optional origin the player must be near the target from. If null, " +
-                 "reach is not enforced (handy before the player exists in step 4).")]
+        [Tooltip("If true, edits must be within reach of the origin (the player).")]
+        [SerializeField] private bool enforceReach = true;
+        [Tooltip("Origin to measure reach from. Defaults to this transform.")]
         [SerializeField] private Transform reachOrigin;
-        [Tooltip("Max distance in tiles from reachOrigin to a valid edit.")]
+        [Tooltip("Max distance, in tiles, from the origin to a valid edit.")]
         [SerializeField] private float reachTiles = 6f;
+
+        [Header("Tool (temporary — comes from equipped item in step 5)")]
+        [SerializeField] private ToolType toolType = ToolType.Pickaxe;
+        [SerializeField] private int toolTier = 1;
+        [Tooltip("Mining speed. time-to-break = hardness / miningPower seconds.")]
+        [Min(0.01f)] [SerializeField] private float miningPower = 4f;
+
+        // Hold-to-mine progress state.
+        private Vector2Int _miningTile;
+        private bool _isMining;
+        private float _miningProgress;
 
         private void Awake()
         {
             if (worldCamera == null) worldCamera = Camera.main;
+            if (reachOrigin == null) reachOrigin = transform;
         }
 
         private void Update()
@@ -42,24 +59,57 @@ namespace Doodgy.Gameplay
             Mouse mouse = Mouse.current;
             if (mouse == null || world == null || worldCamera == null) return;
 
-            Vector3 screen = mouse.position.ReadValue();
-            Vector3 worldPos = worldCamera.ScreenToWorldPoint(screen);
-            worldPos.z = 0f;
-            Vector2Int tile = WorldCoords.WorldToTile(worldPos);
+            Vector2Int tile = MouseTile(mouse);
 
-            if (mouse.leftButton.wasPressedThisFrame) TryMine(tile);
-            else if (mouse.rightButton.wasPressedThisFrame) TryPlace(tile);
+            HandleMining(mouse, tile);
+
+            if (mouse.rightButton.wasPressedThisFrame)
+                TryPlace(tile);
         }
 
-        // --- Intents (validate, then call the authoritative apply) ---
-
-        private void TryMine(Vector2Int tile)
+        private Vector2Int MouseTile(Mouse mouse)
         {
-            if (!world.IsLoaded(tile) || !InReach(tile)) return;
-            if (world.GetTile(tile) == WorldConstants.AirTileId) return; // nothing there
-
-            world.SetTile(tile, WorldConstants.AirTileId);
+            Vector3 worldPos = worldCamera.ScreenToWorldPoint(mouse.position.ReadValue());
+            worldPos.z = 0f;
+            return WorldCoords.WorldToTile(worldPos);
         }
+
+        // --- Mining (hold; progress gated by hardness + tool) ---
+
+        private void HandleMining(Mouse mouse, Vector2Int tile)
+        {
+            if (!mouse.leftButton.isPressed) { ResetMining(); return; }
+            if (!world.IsLoaded(tile) || !InReach(tile)) { ResetMining(); return; }
+
+            ushort id = world.GetTile(tile);
+            if (id == WorldConstants.AirTileId) { ResetMining(); return; }
+
+            TileData data = world.Tiles.Get(id);
+            if (data == null || !data.CanBeMinedBy(toolType, toolTier)) { ResetMining(); return; }
+
+            // Switching target resets accumulated progress.
+            if (!_isMining || tile != _miningTile)
+            {
+                _isMining = true;
+                _miningTile = tile;
+                _miningProgress = 0f;
+            }
+
+            _miningProgress += Time.deltaTime * miningPower;
+            if (_miningProgress >= data.Hardness)
+            {
+                world.SetTile(tile, WorldConstants.AirTileId);
+                ResetMining();
+            }
+        }
+
+        private void ResetMining()
+        {
+            _isMining = false;
+            _miningProgress = 0f;
+        }
+
+        // --- Placing (instant on press) ---
 
         private void TryPlace(Vector2Int tile)
         {
@@ -72,8 +122,9 @@ namespace Doodgy.Gameplay
 
         private bool InReach(Vector2Int tile)
         {
-            if (reachOrigin == null) return true; // reach disabled until a player exists
-            Vector2Int originTile = WorldCoords.WorldToTile(reachOrigin.position);
+            if (!enforceReach) return true;
+            Vector3 origin = reachOrigin != null ? reachOrigin.position : transform.position;
+            Vector2Int originTile = WorldCoords.WorldToTile(origin);
             return Vector2Int.Distance(originTile, tile) <= reachTiles;
         }
     }

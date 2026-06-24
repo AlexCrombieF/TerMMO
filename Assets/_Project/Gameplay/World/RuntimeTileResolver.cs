@@ -28,9 +28,39 @@ namespace Doodgy.Gameplay
             if (data == null) return null;
             if (_cache.TryGetValue(data.Id, out TileBase cached)) return cached;
 
-            TileBase result = data.TileAsset != null ? data.TileAsset : CreatePlaceholder(data);
+            TileBase result;
+            if (data.TileAsset != null) result = data.TileAsset;          // authored Tile/RuleTile
+            else if (data.Sprite != null) result = CreateSpriteTile(data); // raw sprite -> runtime tile
+            else result = CreatePlaceholder(data);                         // colour fallback
+
             _cache[data.Id] = result;
             return result;
+        }
+
+        /// <summary>Drops cached tiles so reassigned sprites are picked up on the next render.</summary>
+        public void Clear() => _cache.Clear();
+
+        /// <summary>
+        /// Wraps a raw sprite in a runtime Tile. The source sprite may be any size
+        /// with any pivot/PPU (e.g. an auto-sliced atlas sub-sprite); we rebuild it
+        /// centred, with PPU == its longest side, so it sits centred in the cell and
+        /// its longest edge spans exactly one tile (aspect preserved, no distortion).
+        /// </summary>
+        private static Tile CreateSpriteTile(TileData data)
+        {
+            Sprite src = data.Sprite;
+            Rect r = src.rect; // sub-rect within the (possibly atlas) texture, in pixels
+            float ppu = Mathf.Max(r.width, r.height);
+
+            var normalized = Sprite.Create(
+                src.texture, r, new Vector2(0.5f, 0.5f), ppu, 0, SpriteMeshType.FullRect);
+            normalized.name = data.DisplayName + "_tile";
+
+            var tile = ScriptableObject.CreateInstance<Tile>();
+            tile.sprite = normalized;
+            tile.color = data.Tint;
+            tile.colliderType = data.IsSolid ? Tile.ColliderType.Grid : Tile.ColliderType.None;
+            return tile;
         }
 
         private static Tile CreatePlaceholder(TileData data)

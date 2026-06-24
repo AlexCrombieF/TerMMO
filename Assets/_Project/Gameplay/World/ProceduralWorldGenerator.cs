@@ -78,8 +78,11 @@ namespace Doodgy.Gameplay
 
             int depth = surfaceHeight - worldY; // 0 at the surface tile, grows downward
 
-            // 1. Base material.
-            ushort id = depth < _s.dirtDepth ? _s.dirtTileId : _s.stoneTileId;
+            // 1. Base material: grass on the very top, dirt band beneath, then stone.
+            ushort id;
+            if (depth == 0) id = _s.grassTileId;
+            else if (depth < _s.dirtDepth) id = _s.dirtTileId;
+            else id = _s.stoneTileId;
 
             // 2. Caves (carve air) — keep a crust near the surface.
             if (_s.cavesEnabled && depth >= _s.caveMinDepthBelowSurface)

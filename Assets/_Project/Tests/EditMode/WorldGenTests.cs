@@ -17,7 +17,7 @@ namespace Doodgy.Tests
         private static WorldGenSettings MakeSettings()
         {
             var s = ScriptableObject.CreateInstance<WorldGenSettings>();
-            s.dirtTileId = 1; s.stoneTileId = 2; s.oreTileId = 3;
+            s.grassTileId = 4; s.dirtTileId = 1; s.stoneTileId = 2; s.oreTileId = 3;
             s.baseSurfaceHeight = 64; s.surfaceAmplitude = 14;
             s.terrainFrequency = 0.012f; s.terrainOctaves = 4;
             s.terrainLacunarity = 2f; s.terrainPersistence = 0.5f; s.dirtDepth = 5;
@@ -96,6 +96,7 @@ namespace Doodgy.Tests
             s.oreThreshold = 0f;             // ore noise always passes -> all stone becomes ore
             s.oreMinDepthBelowSurface = 0;
             s.dirtDepth = 10;
+            s.grassTileId = s.dirtTileId;    // ignore the grass surface layer for this check
             int surface = s.baseSurfaceHeight;
 
             var gen = new ProceduralWorldGenerator(s, 99);

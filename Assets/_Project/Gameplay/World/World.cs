@@ -169,6 +169,7 @@ namespace Doodgy.Gameplay
                 if (rend != null) Destroy(rend.gameObject);
             _chunks.Clear();
             _renderers.Clear();
+            _resolver.Clear(); // pick up any reassigned tile sprites
         }
     }
 }

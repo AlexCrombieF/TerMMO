@@ -29,11 +29,17 @@ namespace Doodgy.Data
         [SerializeField] private string displayName = "New Tile";
 
         [Header("Rendering")]
-        [Tooltip("Tilemap tile asset used to draw this tile (Tile, RuleTile, etc.). " +
-                 "Created/assigned in step 2 — may be null for now.")]
+        [Tooltip("Authored Tilemap tile asset (Tile, RuleTile, etc.). Highest " +
+                 "priority. Leave null to use Sprite or the colour placeholder.")]
         [SerializeField] private TileBase tileAsset;
 
-        [Tooltip("Multiplicative colour tint applied when the tile is drawn.")]
+        [Tooltip("A raw Sprite (e.g. a sliced sub-sprite from an atlas). If set and " +
+                 "TileAsset is null, the resolver wraps it into a runtime tile that " +
+                 "is re-centred and scaled to fill one cell. No Tile asset needed.")]
+        [SerializeField] private Sprite sprite;
+
+        [Tooltip("Multiplicative colour tint. Also the fill colour of the " +
+                 "placeholder tile when no TileAsset/Sprite is assigned.")]
         [SerializeField] private Color tint = Color.white;
 
         [Header("Physical")]
@@ -75,6 +81,7 @@ namespace Doodgy.Data
         public ushort Id => id;
         public string DisplayName => displayName;
         public TileBase TileAsset => tileAsset;
+        public Sprite Sprite => sprite;
         public Color Tint => tint;
         public bool IsSolid => isSolid;
         public float Hardness => hardness;

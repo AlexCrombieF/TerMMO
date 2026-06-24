@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae64e9606d88b4b4ba324ea2b083575f, type: 3}
+  m_Name: WorldGenSettings
+  m_EditorClassIdentifier:
+  grassTileId: 4
+  dirtTileId: 1
+  stoneTileId: 2
+  oreTileId: 3
+  baseSurfaceHeight: 64
+  surfaceAmplitude: 14
+  terrainFrequency: 0.012
+  terrainOctaves: 4
+  terrainLacunarity: 2
+  terrainPersistence: 0.5
+  dirtDepth: 5
+  cavesEnabled: 1
+  caveFrequency: 0.07
+  caveOctaves: 3
+  caveThreshold: 0.55
+  caveMinDepthBelowSurface: 4
+  oreEnabled: 1
+  oreFrequency: 0.14
+  oreOctaves: 2
+  oreThreshold: 0.74
+  oreMinDepthBelowSurface: 8

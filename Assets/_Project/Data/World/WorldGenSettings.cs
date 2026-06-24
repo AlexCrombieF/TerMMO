@@ -14,6 +14,8 @@ namespace Doodgy.Data
     public sealed class WorldGenSettings : ScriptableObject
     {
         [Header("Tiles (ids must exist in the TileDatabase)")]
+        [Tooltip("Topmost surface tile (depth 0).")]
+        public ushort grassTileId = 4;
         public ushort dirtTileId = 1;
         public ushort stoneTileId = 2;
         public ushort oreTileId = 3;

@@ -1,0 +1,20 @@
+{
+    "name": "Doodgy.Editor",
+    "rootNamespace": "Doodgy.EditorTools",
+    "references": [
+        "Doodgy.Core",
+        "Doodgy.Data",
+        "Doodgy.Gameplay"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
