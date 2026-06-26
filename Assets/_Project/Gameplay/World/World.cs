@@ -50,7 +50,15 @@ namespace Doodgy.Gameplay
         /// <summary>Fired after any authoritative tile change. See <see cref="TileChangedEvent"/>.</summary>
         public event Action<TileChangedEvent> OnTileChanged;
 
+        /// <summary>Fired after the world (re)generates, once all chunks exist.</summary>
+        public event Action OnWorldGenerated;
+
         public TileDatabase Tiles => tileDatabase;
+
+        /// <summary>Loaded world width in tiles (fixed rectangle for now).</summary>
+        public int WidthInTiles => worldChunksX * WorldConstants.ChunkSize;
+        /// <summary>Loaded world height in tiles (fixed rectangle for now).</summary>
+        public int HeightInTiles => worldChunksY * WorldConstants.ChunkSize;
 
         public int Seed => seed;
 
@@ -161,6 +169,8 @@ namespace Doodgy.Gameplay
 
             Debug.Log($"[World] Generated {worldChunksX}x{worldChunksY} chunks " +
                       $"({worldChunksX * size}x{worldChunksY * size} tiles), seed {seed}.");
+
+            OnWorldGenerated?.Invoke();
         }
 
         private void ClearWorld()

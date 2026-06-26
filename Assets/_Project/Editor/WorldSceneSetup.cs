@@ -53,6 +53,8 @@ namespace Doodgy.EditorTools
             worldSo.FindProperty("genSettings").objectReferenceValue = gen;
             worldSo.ApplyModifiedPropertiesWithoutUndo();
 
+            worldGo.AddComponent<LightingSystem>(); // tile-based darkness/skylight
+
             // --- Player ------------------------------------------------------
             var playerGo = new GameObject("Player");
             Undo.RegisterCreatedObjectUndo(playerGo, "Create Player");
