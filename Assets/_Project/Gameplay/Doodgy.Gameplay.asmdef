@@ -4,7 +4,8 @@
     "references": [
         "Doodgy.Core",
         "Doodgy.Data",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

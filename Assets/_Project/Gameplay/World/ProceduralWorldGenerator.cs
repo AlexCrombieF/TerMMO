@@ -24,6 +24,7 @@ namespace Doodgy.Gameplay
         private const int Worm1Channel = 5;
         private const int Worm2Channel = 6;
         private const int OreChannel = 7;
+        private const int CoalChannel = 8;
 
         private readonly WorldGenSettings _s;
         private readonly Vector2 _terrainOffset;
@@ -33,6 +34,7 @@ namespace Doodgy.Gameplay
         private readonly Vector2 _worm1Offset;
         private readonly Vector2 _worm2Offset;
         private readonly Vector2 _oreOffset;
+        private readonly Vector2 _coalOffset;
 
         public ProceduralWorldGenerator(WorldGenSettings settings, int seed)
         {
@@ -44,6 +46,7 @@ namespace Doodgy.Gameplay
             _worm1Offset = NoiseUtil.SeedOffset(seed, Worm1Channel);
             _worm2Offset = NoiseUtil.SeedOffset(seed, Worm2Channel);
             _oreOffset = NoiseUtil.SeedOffset(seed, OreChannel);
+            _coalOffset = NoiseUtil.SeedOffset(seed, CoalChannel);
         }
 
         /// <summary>Surface (top solid) tile height for a given world column.</summary>
@@ -121,7 +124,15 @@ namespace Doodgy.Gameplay
             if (depth >= _s.caveMinDepthBelowSurface && IsCarved(worldX, worldY, depth))
                 return WorldConstants.AirTileId;
 
-            // 3. Ore veins replace stone, richer with depth.
+            // 3a. Coal: common, in a shallower band, replaces stone.
+            if (_s.coalEnabled && id == _s.stoneTileId
+                && depth >= _s.coalMinDepthBelowSurface && depth <= _s.coalMaxDepthBelowSurface)
+            {
+                float c = NoiseUtil.Fbm(worldX, worldY, _coalOffset, _s.coalFrequency, 2, 2f, 0.5f);
+                if (c > _s.coalThreshold) id = _s.coalTileId;
+            }
+
+            // 3b. Iron veins replace remaining stone, richer with depth.
             if (_s.oreEnabled && id == _s.stoneTileId && depth >= _s.oreMinDepthBelowSurface)
             {
                 float fade = Mathf.Clamp01((float)(depth - _s.oreMinDepthBelowSurface) / Mathf.Max(1, _s.oreRichDepth));

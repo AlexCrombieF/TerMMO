@@ -61,7 +61,15 @@ namespace Doodgy.Data
         [Tooltip("Half-width of the tunnel carve band. Bigger = wider tunnels.")]
         [Range(0.01f, 0.2f)] public float wormWidth = 0.055f;
 
-        [Header("Ore veins")]
+        [Header("Coal ore (common, shallower)")]
+        public bool coalEnabled = true;
+        public ushort coalTileId = 7;
+        public float coalFrequency = 0.13f;
+        [Range(0f, 1f)] public float coalThreshold = 0.78f;
+        [Min(0)] public int coalMinDepthBelowSurface = 4;
+        [Min(1)] public int coalMaxDepthBelowSurface = 70;
+
+        [Header("Iron ore (deeper, richer with depth)")]
         public bool oreEnabled = true;
         [Tooltip("Higher = smaller, more scattered veins.")]
         public float oreFrequency = 0.14f;

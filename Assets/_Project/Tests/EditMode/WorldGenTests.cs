@@ -26,6 +26,8 @@ namespace Doodgy.Tests
             s.caveThreshold = 0.6f; s.caveMinDepthBelowSurface = 4;
             s.caveDepthBonus = 0.12f; s.caveDepthFadeTiles = 90;
             s.wormCavesEnabled = true; s.wormFrequency = 0.035f; s.wormWidth = 0.055f;
+            s.coalEnabled = true; s.coalTileId = 7; s.coalFrequency = 0.13f;
+            s.coalThreshold = 0.78f; s.coalMinDepthBelowSurface = 4; s.coalMaxDepthBelowSurface = 70;
             s.oreEnabled = true; s.oreFrequency = 0.14f; s.oreOctaves = 2;
             s.oreThreshold = 0.82f; s.oreMinDepthBelowSurface = 8;
             s.oreDepthBonus = 0.14f; s.oreRichDepth = 120;
@@ -98,6 +100,7 @@ namespace Doodgy.Tests
             s.surfaceAmplitude = 0;          // flat surface for a deterministic check
             s.cavesEnabled = false;          // isolate the ore rule (no cavern carving)
             s.wormCavesEnabled = false;      // ...and no worm carving
+            s.coalEnabled = false;           // ...and no coal replacing stone
             s.dirtDepthVariance = 0;         // fixed dirt/stone boundary
             s.oreThreshold = 0f;             // ore noise always passes -> all stone becomes ore
             s.oreDepthBonus = 0f;

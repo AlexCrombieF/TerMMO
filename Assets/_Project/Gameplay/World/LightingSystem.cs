@@ -27,7 +27,7 @@ namespace Doodgy.Gameplay
         [SerializeField] private float solidAttenuation = 0.22f;
         [Min(1)] [SerializeField] private int iterations = 4;
         [Tooltip("Floor on visibility (0 = pitch black, ~0.03 = a faint hint in the dark).")]
-        [Range(0f, 0.2f)] [SerializeField] private float minVisibility = 0.02f;
+        [Range(0f, 0.2f)] [SerializeField] private float minVisibility = 0f;
 
         [Header("Render")]
         [Tooltip("Draw order of the darkness overlay (above tiles and the player).")]

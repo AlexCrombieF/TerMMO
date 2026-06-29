@@ -21,7 +21,7 @@ MonoBehaviour:
   hardness: 1
   requiredTool: 1
   minToolTier: 0
-  dropItem: {fileID: 0}
+  dropItem: {fileID: 11400000, guid: 20c61e26b74c04a4fb218a5b8a9fc9fa, type: 2}
   dropMin: 1
   dropMax: 1
   blocksLight: 1

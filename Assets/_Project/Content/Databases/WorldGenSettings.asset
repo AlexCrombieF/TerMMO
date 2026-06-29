@@ -35,6 +35,12 @@ MonoBehaviour:
   wormCavesEnabled: 1
   wormFrequency: 0.035
   wormWidth: 0.055
+  coalEnabled: 1
+  coalTileId: 7
+  coalFrequency: 0.13
+  coalThreshold: 0.78
+  coalMinDepthBelowSurface: 4
+  coalMaxDepthBelowSurface: 70
   oreEnabled: 1
   oreFrequency: 0.14
   oreOctaves: 2

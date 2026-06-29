@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07b67f280bc1ccd4bb0e92d0fdbbc445, type: 3}
+  m_Name: Tile_Torch
+  m_EditorClassIdentifier: 
+  id: 5
+  displayName: Torch
+  tileAsset: {fileID: 0}
+  sprite: {fileID: 7077204653017257807, guid: 1c3c0e0134c8f554796a286829e79a21, type: 3}
+  tint: {r: 1, g: 1, b: 1, a: 1}
+  isSolid: 0
+  hardness: 0.2
+  requiredTool: 0
+  minToolTier: 0
+  dropItem: {fileID: 11400000, guid: eaa1fd20d01e9f34db3d396ac679c263, type: 2}
+  dropMin: 1
+  dropMax: 1
+  blocksLight: 0
+  emitsLight: 1
+  lightColor: {r: 1, g: 1, b: 1, a: 1}
+  lightIntensity: 0.9

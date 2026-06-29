@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f70717f7d7f6764d896012f27e63d97, type: 3}
+  m_Name: Item_Grass
+  m_EditorClassIdentifier: 
+  id: 12
+  displayName: Grass Block
+  description: 
+  icon: {fileID: -5955371678980241302, guid: 02517ef5c632f2d4584ad175c1f6bca2, type: 3}
+  category: 1
+  rarity: 0
+  maxStackSize: 999
+  placesTile: {fileID: 11400000, guid: f6071829304a5b6c7d8e9f0012233445, type: 2}
+  toolType: 0
+  toolTier: 0
+  miningPower: 1
+  reach: 4

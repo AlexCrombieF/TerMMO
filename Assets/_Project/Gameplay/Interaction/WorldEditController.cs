@@ -6,52 +6,49 @@ using Doodgy.Data;
 namespace Doodgy.Gameplay
 {
     /// <summary>
-    /// Turns mouse input into validated tile-edit INTENTS, originating from the
-    /// player (attach this to the player GameObject):
-    ///   - Hold left  -> mine the targeted tile (progress scales with hardness /
-    ///                   mining power; gated by tool type + tier).
-    ///   - Right click -> place the selected tile into an empty, in-reach cell.
+    /// Turns mouse input into validated tile-edit INTENTS, driven by the player's
+    /// currently HELD hotbar item:
+    ///   - Hold left  -> mine the targeted tile. A held Tool sets the tool type /
+    ///                   tier / mining power; otherwise bare-hand defaults apply.
+    ///                   Drops are added to the inventory.
+    ///   - Right click -> if the held item is placeable, place its tile into an
+    ///                   empty, in-reach cell and consume one.
     ///
     /// Client-side intent producer: validates locally (reach, occupancy, tool),
     /// then calls the authoritative <see cref="World.SetTile"/>. Under netcode the
-    /// same TryMine/TryPlace checks run server-side; the client just requests.
-    ///
-    /// TOOL SOURCE: tool type/tier/power are serialized here for now. Once the
-    /// inventory exists (step 5) these read from the equipped/held tool's ItemData
-    /// instead — swap <see cref="_toolType"/> etc. for the held item's fields.
+    /// same checks run server-side and only the server applies + rolls drops.
     /// </summary>
     public sealed class WorldEditController : MonoBehaviour
     {
         [Header("References")]
         [SerializeField] private World world;
         [SerializeField] private Camera worldCamera;
-
-        [Tooltip("Tile placed on right-click. Assign any TileData asset.")]
-        [SerializeField] private TileData placeTile;
+        [SerializeField] private PlayerInventory inventory;
 
         [Header("Reach")]
-        [Tooltip("If true, edits must be within reach of the origin (the player).")]
         [SerializeField] private bool enforceReach = true;
-        [Tooltip("Origin to measure reach from. Defaults to this transform.")]
         [SerializeField] private Transform reachOrigin;
-        [Tooltip("Max distance, in tiles, from the origin to a valid edit.")]
+        [Tooltip("Default reach (tiles) when not holding a tool that defines its own.")]
         [SerializeField] private float reachTiles = 6f;
 
-        [Header("Tool (temporary — comes from equipped item in step 5)")]
-        [SerializeField] private ToolType toolType = ToolType.Pickaxe;
-        [SerializeField] private int toolTier = 1;
-        [Tooltip("Mining speed. time-to-break = hardness / miningPower seconds.")]
-        [Min(0.01f)] [SerializeField] private float miningPower = 4f;
+        [Header("Bare-hand defaults (when not holding a tool)")]
+        [SerializeField] private ToolType handToolType = ToolType.None;
+        [SerializeField] private int handToolTier = 0;
+        [Min(0.01f)] [SerializeField] private float handMiningPower = 2f;
 
         // Hold-to-mine progress state.
         private Vector2Int _miningTile;
         private bool _isMining;
         private float _miningProgress;
 
+        // Seeded, server-side drop rolls (deterministic / replayable).
+        private System.Random _rng;
+
         private void Awake()
         {
             if (worldCamera == null) worldCamera = Camera.main;
             if (reachOrigin == null) reachOrigin = transform;
+            _rng = new System.Random();
         }
 
         private void Update()
@@ -61,10 +58,33 @@ namespace Doodgy.Gameplay
 
             Vector2Int tile = MouseTile(mouse);
 
-            HandleMining(mouse, tile);
+            // Chopping a tree under the cursor takes precedence over tile mining.
+            if (!HandleChop(mouse, tile))
+                HandleMining(mouse, tile);
 
             if (mouse.rightButton.wasPressedThisFrame)
                 TryPlace(tile);
+        }
+
+        // --- Chopping trees (left-hold with an axe) ---
+
+        private bool HandleChop(Mouse mouse, Vector2Int tile)
+        {
+            if (!mouse.leftButton.isPressed) return false;
+
+            Vector3 wp = worldCamera.ScreenToWorldPoint(mouse.position.ReadValue());
+            wp.z = 0f;
+            Collider2D col = Physics2D.OverlapPoint(wp);
+            Choppable tree = col != null ? col.GetComponent<Choppable>() : null;
+            if (tree == null) return false;
+
+            ResetMining(); // we're on a tree, not a tile
+            if (InReach(tile))
+            {
+                GetToolStats(out ToolType toolType, out _, out float power);
+                if (toolType == ToolType.Axe) tree.Chop(power * Time.deltaTime, inventory);
+            }
+            return true; // tree handled the click; skip tile mining behind it
         }
 
         private Vector2Int MouseTile(Mouse mouse)
@@ -74,7 +94,7 @@ namespace Doodgy.Gameplay
             return WorldCoords.WorldToTile(worldPos);
         }
 
-        // --- Mining (hold; progress gated by hardness + tool) ---
+        // --- Mining (hold; progress gated by hardness + held/hand tool) ---
 
         private void HandleMining(Mouse mouse, Vector2Int tile)
         {
@@ -85,9 +105,11 @@ namespace Doodgy.Gameplay
             if (id == WorldConstants.AirTileId) { ResetMining(); return; }
 
             TileData data = world.Tiles.Get(id);
-            if (data == null || !data.CanBeMinedBy(toolType, toolTier)) { ResetMining(); return; }
+            if (data == null) { ResetMining(); return; }
 
-            // Switching target resets accumulated progress.
+            GetToolStats(out ToolType toolType, out int toolTier, out float power);
+            if (!data.CanBeMinedBy(toolType, toolTier)) { ResetMining(); return; }
+
             if (!_isMining || tile != _miningTile)
             {
                 _isMining = true;
@@ -95,12 +117,20 @@ namespace Doodgy.Gameplay
                 _miningProgress = 0f;
             }
 
-            _miningProgress += Time.deltaTime * miningPower;
+            _miningProgress += Time.deltaTime * power;
             if (_miningProgress >= data.Hardness)
             {
-                world.SetTile(tile, WorldConstants.AirTileId);
+                if (world.SetTile(tile, WorldConstants.AirTileId))
+                    GrantDrops(data);
                 ResetMining();
             }
+        }
+
+        private void GrantDrops(TileData data)
+        {
+            if (inventory == null || data.DropItem == null) return;
+            int count = data.RollDropCount(_rng);
+            if (count > 0) inventory.Inventory.Add(data.DropItem, count);
         }
 
         private void ResetMining()
@@ -109,23 +139,53 @@ namespace Doodgy.Gameplay
             _miningProgress = 0f;
         }
 
-        // --- Placing (instant on press) ---
+        // --- Placing (instant on press; consumes the held block) ---
 
         private void TryPlace(Vector2Int tile)
         {
-            if (placeTile == null) return;
+            if (inventory == null) return;
+            ItemStack held = inventory.Held;
+            if (held.IsEmpty || !held.Item.IsPlaceable) return;
+
             if (!world.IsLoaded(tile) || !InReach(tile)) return;
             if (world.GetTile(tile) != WorldConstants.AirTileId) return; // occupied
 
-            world.SetTile(tile, placeTile.Id);
+            if (world.SetTile(tile, held.Item.PlacesTile.Id))
+                inventory.ConsumeSelected(1);
+        }
+
+        // --- Helpers ---
+
+        private void GetToolStats(out ToolType toolType, out int toolTier, out float power)
+        {
+            ItemStack held = inventory != null ? inventory.Held : ItemStack.Empty;
+            if (!held.IsEmpty && held.Item.Category == ItemCategory.Tool)
+            {
+                toolType = held.Item.ToolType;
+                toolTier = held.Item.ToolTier;
+                power = Mathf.Max(0.01f, held.Item.MiningPower);
+            }
+            else
+            {
+                toolType = handToolType;
+                toolTier = handToolTier;
+                power = handMiningPower;
+            }
         }
 
         private bool InReach(Vector2Int tile)
         {
             if (!enforceReach) return true;
+
+            // A held tool may extend reach.
+            float reach = reachTiles;
+            ItemStack held = inventory != null ? inventory.Held : ItemStack.Empty;
+            if (!held.IsEmpty && held.Item.Category == ItemCategory.Tool && held.Item.Reach > 0f)
+                reach = held.Item.Reach;
+
             Vector3 origin = reachOrigin != null ? reachOrigin.position : transform.position;
             Vector2Int originTile = WorldCoords.WorldToTile(origin);
-            return Vector2Int.Distance(originTile, tile) <= reachTiles;
+            return Vector2Int.Distance(originTile, tile) <= reach;
         }
     }
 }
