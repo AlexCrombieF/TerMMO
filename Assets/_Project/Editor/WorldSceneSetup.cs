@@ -21,6 +21,7 @@ namespace Doodgy.EditorTools
         private const string Items = "Assets/_Project/Content/Items/";
         private const string Tiles = "Assets/_Project/Content/Tiles/";
         private const string UI = "Assets/_Project/Content/UI/";
+        private const string FX = "Assets/_Project/Content/FX/";
 
         [MenuItem("Doodgy/Setup Test Scene")]
         public static void SetupTestScene()
@@ -83,6 +84,7 @@ namespace Doodgy.EditorTools
             var edit = playerGo.AddComponent<WorldEditController>();
             var hud = playerGo.AddComponent<HotbarHUD>();
             var craft = playerGo.AddComponent<CraftingPanel>();
+            var cracks = playerGo.AddComponent<MiningCrackOverlay>();
 
             // --- Camera (parented to player so it follows) -------------------
             Camera cam = Camera.main;
@@ -122,6 +124,22 @@ namespace Doodgy.EditorTools
                 rp.GetArrayElementAtIndex(i).objectReferenceValue =
                     AssetDatabase.LoadAssetAtPath<Recipe>(AssetDatabase.GUIDToAssetPath(recipeGuids[i]));
             craftSo.ApplyModifiedPropertiesWithoutUndo();
+
+            var crackSo = new SerializedObject(cracks);
+            crackSo.FindProperty("editor").objectReferenceValue = edit;
+            Sprite[] crackFrames =
+            {
+                EditorSpriteUtil.LoadSprite(FX + "Crack1.aseprite"),
+                EditorSpriteUtil.LoadSprite(FX + "Crack2.aseprite"),
+                EditorSpriteUtil.LoadSprite(FX + "Crack3.aseprite"),
+                EditorSpriteUtil.LoadSprite(FX + "Crack4.aseprite"),
+                EditorSpriteUtil.LoadSprite(FX + "Crack5.aseprite"),
+            };
+            SerializedProperty cf = crackSo.FindProperty("crackFrames");
+            cf.arraySize = crackFrames.Length;
+            for (int i = 0; i < crackFrames.Length; i++)
+                cf.GetArrayElementAtIndex(i).objectReferenceValue = crackFrames[i];
+            crackSo.ApplyModifiedPropertiesWithoutUndo();
 
             Selection.activeGameObject = worldGo;
 

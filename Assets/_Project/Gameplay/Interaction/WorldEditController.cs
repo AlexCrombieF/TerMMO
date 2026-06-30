@@ -40,6 +40,14 @@ namespace Doodgy.Gameplay
         private Vector2Int _miningTile;
         private bool _isMining;
         private float _miningProgress;
+        private float _miningHardness;
+
+        /// <summary>True while actively mining a tile (not chopping).</summary>
+        public bool IsMiningTile => _isMining;
+        /// <summary>The tile currently being mined.</summary>
+        public Vector2Int MiningTile => _miningTile;
+        /// <summary>Mining completion [0..1] of the current tile (for crack visuals).</summary>
+        public float MiningProgress01 => _miningHardness > 0f ? Mathf.Clamp01(_miningProgress / _miningHardness) : 0f;
 
         // Seeded, server-side drop rolls (deterministic / replayable).
         private System.Random _rng;
@@ -116,6 +124,7 @@ namespace Doodgy.Gameplay
                 _miningTile = tile;
                 _miningProgress = 0f;
             }
+            _miningHardness = data.Hardness;
 
             _miningProgress += Time.deltaTime * power;
             if (_miningProgress >= data.Hardness)
