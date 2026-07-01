@@ -80,50 +80,70 @@ namespace Doodgy.Gameplay
             return false;
         }
 
-        private void BuildTree(int x, int surfaceY, int height)
+        private void BuildTree(int x, int surfaceY, int heightTiles)
         {
             var tree = new GameObject($"Tree_{x}");
             tree.transform.SetParent(_container, false);
 
-            float cx = x + 0.5f;
-            float baseY = surfaceY + 1; // first tile above the ground
+            float cx = x + 0.5f;              // centre column (1-wide trunk)
+            float bottom = surfaceY + 1f;     // first tile above the ground
+            float y = bottom;
 
-            if (stumpSprite != null)
-                AddPiece(tree.transform, stumpSprite, new Vector3(cx, baseY + 0.5f, 0f), 1f, 1f);
+            // Each piece is auto-sized from its pixels (16 px = 1 tile), so the
+            // stump (48x16) is 3x1, the trunk (16x16) is 1x1, the canopy (48x48) 3x3.
+            if (stumpSprite != null) y += AddPiece(tree.transform, stumpSprite, cx, y);
 
-            for (int i = 1; i <= height; i++)
-                if (trunkSprite != null)
-                    AddPiece(tree.transform, trunkSprite, new Vector3(cx, baseY + i + 0.5f, 0f), 1f, 1f);
+            float targetTop = bottom + heightTiles;
+            int guard = 0;
+            while (trunkSprite != null && y < targetTop && guard++ < 64)
+                y += AddPiece(tree.transform, trunkSprite, cx, y);
 
+            float canopyH = 0f;
             if (canopySprite != null)
-                AddPiece(tree.transform, canopySprite, new Vector3(cx, baseY + height + 1f, 0f), 3f, 3f);
+                canopyH = AddPiece(tree.transform, canopySprite, cx, y - 0.5f); // slight overlap
 
-            // Trigger collider over the trunk for click-to-chop (doesn't block movement).
-            float totalH = height + 3f;
+            // Trigger collider over the whole tree for click-to-chop (doesn't block movement).
+            float top = (y - 0.5f) + canopyH;
+            float totalH = Mathf.Max(1f, top - bottom);
             var box = tree.AddComponent<BoxCollider2D>();
             box.isTrigger = true;
-            box.size = new Vector2(1.2f, totalH);
-            box.offset = new Vector2(cx, baseY + totalH * 0.5f);
+            box.size = new Vector2(3f, totalH);
+            box.offset = new Vector2(cx, bottom + totalH * 0.5f);
 
             var chop = tree.AddComponent<Choppable>();
-            chop.Configure(woodItem, Mathf.Max(1, height * woodPerSegment), height);
+            chop.Configure(woodItem, Mathf.Max(1, heightTiles / 2 * woodPerSegment),
+                           heightTiles, new Vector3(cx, bottom + 1f, 0f));
         }
 
-        private void AddPiece(Transform parent, Sprite sprite, Vector3 worldCenter, float wTiles, float hTiles)
+        // 16 px of source art == 1 world tile (all our sprites use this scale).
+        private const float PixelsPerTile = 16f;
+
+        /// <summary>
+        /// Adds one sprite piece at its natural size (pixels/16 tiles), centred on
+        /// <paramref name="centerX"/> with its bottom edge at <paramref name="bottomY"/>
+        /// (pivot-independent). Returns the piece's height in tiles.
+        /// </summary>
+        private float AddPiece(Transform parent, Sprite sprite, float centerX, float bottomY)
         {
+            float wTiles = sprite.rect.width / PixelsPerTile;
+            float hTiles = sprite.rect.height / PixelsPerTile;
+            Vector2 size = sprite.bounds.size;
+            if (size.x <= 0f || size.y <= 0f) return 0f;
+
+            float sx = wTiles / size.x;
+            float sy = hTiles / size.y;
+
             var go = new GameObject("piece");
             go.transform.SetParent(parent, false);
-
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
             sr.sortingOrder = sortingOrder;
+            go.transform.localScale = new Vector3(sx, sy, 1f);
 
-            // Scale so the sprite spans the requested number of tiles (1 tile = 1 unit).
-            Vector2 size = sprite.bounds.size;
-            go.transform.localScale = new Vector3(
-                size.x > 0f ? wTiles / size.x : 1f,
-                size.y > 0f ? hTiles / size.y : 1f, 1f);
-            go.transform.position = worldCenter;
+            Vector3 slotCenter = new Vector3(centerX, bottomY + hTiles * 0.5f, 0f);
+            Vector3 c = sprite.bounds.center;
+            go.transform.position = slotCenter - new Vector3(c.x * sx, c.y * sy, 0f);
+            return hTiles;
         }
     }
 }

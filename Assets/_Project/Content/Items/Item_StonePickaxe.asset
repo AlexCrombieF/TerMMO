@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f70717f7d7f6764d896012f27e63d97, type: 3}
-  m_Name: Item_Wood
+  m_Name: Item_StonePickaxe
   m_EditorClassIdentifier: 
-  id: 14
-  displayName: Wood
+  id: 22
+  displayName: Stone Pickaxe
   description: 
-  icon: {fileID: -7247684265367877801, guid: 86b18371b7c08b2459ba4f5df394c319, type: 3}
-  category: 0
+  icon: {fileID: -4162534375245219569, guid: 493cf9aee38a6ba4fbfc18017764def0, type: 3}
+  category: 2
   rarity: 0
-  maxStackSize: 999
+  maxStackSize: 1
   placesTile: {fileID: 0}
-  toolType: 0
-  toolTier: 0
-  miningPower: 1
-  reach: 4
+  toolType: 1
+  toolTier: 2
+  miningPower: 5
+  reach: 5
   objectSprite: {fileID: 0}
   objectSize: {x: 1, y: 1}
   objectKind: 

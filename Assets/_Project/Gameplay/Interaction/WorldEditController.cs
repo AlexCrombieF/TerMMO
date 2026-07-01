@@ -49,6 +49,13 @@ namespace Doodgy.Gameplay
         /// <summary>Mining completion [0..1] of the current tile (for crack visuals).</summary>
         public float MiningProgress01 => _miningHardness > 0f ? Mathf.Clamp01(_miningProgress / _miningHardness) : 0f;
 
+        // Chop feedback state.
+        private Choppable _chopTarget;
+        private Vector2Int _chopTile;
+        public bool IsChopping => _chopTarget != null;
+        public Vector2Int ChopTile => _chopTile;
+        public float ChopProgress01 => _chopTarget != null ? _chopTarget.Progress01 : 0f;
+
         // Seeded, server-side drop rolls (deterministic / replayable).
         private System.Random _rng;
 
@@ -66,6 +73,10 @@ namespace Doodgy.Gameplay
 
             Vector2Int tile = MouseTile(mouse);
 
+            // A single left-click on a placed object (workbench) picks it up.
+            if (mouse.leftButton.wasPressedThisFrame && TryPickUpObject(mouse, tile))
+                return;
+
             // Chopping a tree under the cursor takes precedence over tile mining.
             if (!HandleChop(mouse, tile))
                 HandleMining(mouse, tile);
@@ -74,23 +85,44 @@ namespace Doodgy.Gameplay
                 TryPlace(tile);
         }
 
+        private bool TryPickUpObject(Mouse mouse, Vector2Int tile)
+        {
+            Vector3 wp = worldCamera.ScreenToWorldPoint(mouse.position.ReadValue());
+            wp.z = 0f;
+            Collider2D col = Physics2D.OverlapPoint(wp);
+            PlacedObject po = col != null ? col.GetComponent<PlacedObject>() : null;
+            if (po == null) return false;
+            if (!InReach(tile)) return true; // clicked but out of reach — consume the click
+
+            if (po.Source != null && inventory != null)
+                ItemPickup.Spawn(po.Source, 1, po.transform.position, inventory);
+            Destroy(po.gameObject);
+            return true;
+        }
+
         // --- Chopping trees (left-hold with an axe) ---
 
         private bool HandleChop(Mouse mouse, Vector2Int tile)
         {
-            if (!mouse.leftButton.isPressed) return false;
+            if (!mouse.leftButton.isPressed) { _chopTarget = null; return false; }
 
             Vector3 wp = worldCamera.ScreenToWorldPoint(mouse.position.ReadValue());
             wp.z = 0f;
             Collider2D col = Physics2D.OverlapPoint(wp);
             Choppable tree = col != null ? col.GetComponent<Choppable>() : null;
-            if (tree == null) return false;
+            if (tree == null) { _chopTarget = null; return false; }
 
             ResetMining(); // we're on a tree, not a tile
+            _chopTarget = null;
             if (InReach(tile))
             {
                 GetToolStats(out ToolType toolType, out _, out float power);
-                if (toolType == ToolType.Axe) tree.Chop(power * Time.deltaTime, inventory);
+                if (toolType == ToolType.Axe)
+                {
+                    _chopTarget = tree;
+                    _chopTile = tile;
+                    tree.Chop(power * Time.deltaTime, inventory);
+                }
             }
             return true; // tree handled the click; skip tile mining behind it
         }
@@ -130,16 +162,20 @@ namespace Doodgy.Gameplay
             if (_miningProgress >= data.Hardness)
             {
                 if (world.SetTile(tile, WorldConstants.AirTileId))
-                    GrantDrops(data);
+                    GrantDrops(data, tile);
                 ResetMining();
             }
         }
 
-        private void GrantDrops(TileData data)
+        private void GrantDrops(TileData data, Vector2Int tile)
         {
             if (inventory == null || data.DropItem == null) return;
             int count = data.RollDropCount(_rng);
-            if (count > 0) inventory.Inventory.Add(data.DropItem, count);
+            if (count > 0)
+            {
+                Vector3 pos = new Vector3(tile.x + 0.5f, tile.y + 0.5f, 0f);
+                ItemPickup.Spawn(data.DropItem, count, pos, inventory);
+            }
         }
 
         private void ResetMining()
@@ -154,13 +190,33 @@ namespace Doodgy.Gameplay
         {
             if (inventory == null) return;
             ItemStack held = inventory.Held;
-            if (held.IsEmpty || !held.Item.IsPlaceable) return;
+            if (held.IsEmpty) return;
+
+            if (held.Item.IsPlaceableObject) { TryPlaceObject(tile, held.Item); return; }
+            if (!held.Item.IsPlaceable) return;
 
             if (!world.IsLoaded(tile) || !InReach(tile)) return;
             if (world.GetTile(tile) != WorldConstants.AirTileId) return; // occupied
 
             if (world.SetTile(tile, held.Item.PlacesTile.Id))
                 inventory.ConsumeSelected(1);
+        }
+
+        private void TryPlaceObject(Vector2Int tile, ItemData item)
+        {
+            if (!InReach(tile)) return;
+
+            int w = Mathf.Max(1, item.ObjectSize.x);
+            int h = Mathf.Max(1, item.ObjectSize.y);
+            for (int dx = 0; dx < w; dx++)
+                for (int dy = 0; dy < h; dy++)
+                {
+                    var t = new Vector2Int(tile.x + dx, tile.y + dy);
+                    if (!world.IsLoaded(t) || world.GetTile(t) != WorldConstants.AirTileId) return; // needs clear space
+                }
+
+            PlacedObject.Spawn(item, tile);
+            inventory.ConsumeSelected(1);
         }
 
         // --- Helpers ---

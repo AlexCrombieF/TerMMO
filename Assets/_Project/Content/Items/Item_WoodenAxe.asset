@@ -22,5 +22,8 @@ MonoBehaviour:
   placesTile: {fileID: 0}
   toolType: 2
   toolTier: 1
-  miningPower: 5
+  miningPower: 3
   reach: 5
+  objectSprite: {fileID: 0}
+  objectSize: {x: 1, y: 1}
+  objectKind: 

@@ -72,10 +72,11 @@ namespace Doodgy.EditorTools
             Item(itWood,  14, "Wood",        trunkSpr,  ItemCategory.Material,  999, null);
             Item(itPlanks,15, "Wood Planks", planksSpr, ItemCategory.TileBlock, 999, planksTile);
             Item(itTorch, 16, "Torch",       torchSpr,  ItemCategory.TileBlock, 999, torchTile);
-            Item(itBench, 18, "Workbench",   benchSpr,  ItemCategory.TileBlock, 99,  benchTile);
-            Tool(itPick,      20, "Wooden Pickaxe", pickSpr,      ToolType.Pickaxe, 1, 5f, 5f);
-            Tool(itAxe,       21, "Wooden Axe",     axeSpr,       ToolType.Axe,     1, 5f, 5f);
-            Tool(itStonePick, 22, "Stone Pickaxe",  stonePickSpr, ToolType.Pickaxe, 2, 6f, 5f);
+            Item(itBench, 18, "Workbench",   benchSpr,  ItemCategory.TileBlock, 99,  null);
+            SetObject(itBench, benchSpr, 2, 1, "Workbench"); // placed as a 2x1 object
+            Tool(itPick,      20, "Wooden Pickaxe", pickSpr,      ToolType.Pickaxe, 1, 2.2f, 5f);
+            Tool(itAxe,       21, "Wooden Axe",     axeSpr,       ToolType.Axe,     1, 3f,   5f);
+            Tool(itStonePick, 22, "Stone Pickaxe",  stonePickSpr, ToolType.Pickaxe, 2, 5f,   5f);
 
             // --- configure new tiles ---
             Tile(torchTile, 5, "Torch", torchSpr,
@@ -177,6 +178,16 @@ namespace Doodgy.EditorTools
             so.FindProperty("lightIntensity").floatValue = lightIntensity;
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(tile);
+        }
+
+        private static void SetObject(ItemData item, Sprite sprite, int w, int h, string kind)
+        {
+            var so = new SerializedObject(item);
+            so.FindProperty("objectSprite").objectReferenceValue = sprite;
+            so.FindProperty("objectSize").vector2IntValue = new Vector2Int(w, h);
+            so.FindProperty("objectKind").stringValue = kind;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(item);
         }
 
         private static void SetTint(TileData tile, Color c)

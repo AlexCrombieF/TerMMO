@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f70717f7d7f6764d896012f27e63d97, type: 3}
-  m_Name: Item_Wood
+  m_Name: Item_Coal
   m_EditorClassIdentifier: 
-  id: 14
-  displayName: Wood
+  id: 17
+  displayName: Coal
   description: 
-  icon: {fileID: -7247684265367877801, guid: 86b18371b7c08b2459ba4f5df394c319, type: 3}
+  icon: {fileID: 5791689598210928568, guid: 5b4d7b1056182ac4db7bb671974b6051, type: 3}
   category: 0
   rarity: 0
   maxStackSize: 999

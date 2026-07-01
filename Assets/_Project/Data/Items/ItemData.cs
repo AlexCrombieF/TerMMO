@@ -54,6 +54,14 @@ namespace Doodgy.Data
         [Tooltip("How far (in tiles) the player can reach to use this tool.")]
         [Min(0f)] [SerializeField] private float reach = 4f;
 
+        [Header("Placeable object (optional; alternative to Places Tile)")]
+        [Tooltip("If set (with a Kind), placing spawns a multi-tile world object " +
+                 "(e.g. a workbench) instead of a single tile.")]
+        [SerializeField] private Sprite objectSprite;
+        [SerializeField] private Vector2Int objectSize = Vector2Int.one;
+        [Tooltip("Identifier used by systems that look for this object, e.g. \"Workbench\".")]
+        [SerializeField] private string objectKind = "";
+
         // --- Read-only public API. Data is authored, never mutated at runtime. ---
         public int Id => id;
         public string DisplayName => displayName;
@@ -69,6 +77,10 @@ namespace Doodgy.Data
         public int ToolTier => toolTier;
         public float MiningPower => miningPower;
         public float Reach => reach;
+        public Sprite ObjectSprite => objectSprite;
+        public Vector2Int ObjectSize => objectSize;
+        public string ObjectKind => objectKind;
+        public bool IsPlaceableObject => objectSprite != null && !string.IsNullOrEmpty(objectKind);
 
 #if UNITY_EDITOR
         // virtual so subclasses (WeaponItemData, etc.) can extend validation.
