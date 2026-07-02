@@ -25,6 +25,13 @@ namespace Doodgy.Gameplay
         public int Size => _slots.Length;
         public ItemStack Get(int index) => _slots[index];
 
+        /// <summary>Directly sets a slot (used by inventory UI move/swap) and notifies.</summary>
+        public void SetSlot(int index, ItemStack stack)
+        {
+            _slots[index] = stack;
+            Changed?.Invoke();
+        }
+
         /// <summary>
         /// Adds up to <paramref name="count"/> of an item, filling existing stacks
         /// first, then empty slots, respecting each item's max stack size.

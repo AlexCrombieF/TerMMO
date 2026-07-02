@@ -19,14 +19,18 @@ namespace Doodgy.Gameplay
             public int count;
         }
 
-        [Tooltip("Number of hotbar slots.")]
-        [Min(1)] [SerializeField] private int size = 10;
+        [Tooltip("Total inventory slots (hotbar + backpack).")]
+        [Min(1)] [SerializeField] private int size = 20;
+
+        [Tooltip("How many of the slots are the always-visible hotbar row.")]
+        [Min(1)] [SerializeField] private int hotbarSize = 10;
 
         [Tooltip("Items granted at spawn (pickaxe, axe, torches...).")]
         [SerializeField] private StartItem[] startingItems;
 
         public Inventory Inventory { get; private set; }
         public int Size => size;
+        public int HotbarSize => Mathf.Min(hotbarSize, size);
         public int Selected { get; private set; }
 
         /// <summary>The currently selected hotbar stack (what the player is holding).</summary>
@@ -47,7 +51,7 @@ namespace Doodgy.Gameplay
             Keyboard kb = Keyboard.current;
             if (kb != null)
             {
-                int hotkeys = Mathf.Min(10, size);
+                int hotkeys = Mathf.Min(10, HotbarSize);
                 for (int i = 0; i < hotkeys; i++)
                 {
                     // Key.Digit1..Digit9 are contiguous, then Digit0 (slot 10).
@@ -65,10 +69,11 @@ namespace Doodgy.Gameplay
             }
         }
 
-        /// <summary>Selects a slot, wrapping around the hotbar.</summary>
+        /// <summary>Selects a hotbar slot, wrapping around the hotbar row.</summary>
         public void Select(int index)
         {
-            int wrapped = ((index % size) + size) % size;
+            int h = HotbarSize;
+            int wrapped = ((index % h) + h) % h;
             if (wrapped == Selected) return;
             Selected = wrapped;
             SelectionChanged?.Invoke();

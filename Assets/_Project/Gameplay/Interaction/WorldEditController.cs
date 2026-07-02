@@ -71,6 +71,15 @@ namespace Doodgy.Gameplay
             Mouse mouse = Mouse.current;
             if (mouse == null || world == null || worldCamera == null) return;
 
+            // Don't mine/place/pick through open UI (backpack, crafting panel).
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es != null && es.IsPointerOverGameObject())
+            {
+                ResetMining();
+                _chopTarget = null;
+                return;
+            }
+
             Vector2Int tile = MouseTile(mouse);
 
             // A single left-click on a placed object (workbench) picks it up.

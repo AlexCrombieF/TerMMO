@@ -44,7 +44,7 @@ namespace Doodgy.Gameplay
 
         private void BuildUI()
         {
-            int n = _inv.Size;
+            int n = _inv.HotbarSize;
 
             var canvasGo = new GameObject("HotbarCanvas");
             var canvas = canvasGo.AddComponent<Canvas>();
@@ -57,12 +57,13 @@ namespace Doodgy.Gameplay
 
             var row = new GameObject("Hotbar").AddComponent<RectTransform>();
             row.SetParent(canvasGo.transform, false);
-            row.anchorMin = new Vector2(0.5f, 0f);
-            row.anchorMax = new Vector2(0.5f, 0f);
-            row.pivot = new Vector2(0.5f, 0f);
+            // Anchor to the bottom-right corner.
+            row.anchorMin = new Vector2(1f, 0f);
+            row.anchorMax = new Vector2(1f, 0f);
+            row.pivot = new Vector2(1f, 0f);
             float totalW = n * slotSize + (n - 1) * spacing;
             row.sizeDelta = new Vector2(totalW, slotSize);
-            row.anchoredPosition = new Vector2(0f, bottomMargin);
+            row.anchoredPosition = new Vector2(-bottomMargin, bottomMargin);
 
             Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
@@ -74,6 +75,8 @@ namespace Doodgy.Gameplay
             {
                 var frame = new GameObject($"Slot{i}").AddComponent<Image>();
                 frame.sprite = slotFrame;
+                frame.color = new Color(1f, 1f, 1f, 0.7f); // slightly transparent slots
+                frame.raycastTarget = false;               // don't block world clicks
                 RectTransform fr = frame.rectTransform;
                 fr.SetParent(row, false);
                 fr.anchorMin = new Vector2(0f, 0.5f);

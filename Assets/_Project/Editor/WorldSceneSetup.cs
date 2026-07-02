@@ -85,6 +85,7 @@ namespace Doodgy.EditorTools
             var hud = playerGo.AddComponent<HotbarHUD>();
             var craft = playerGo.AddComponent<CraftingPanel>();
             var cracks = playerGo.AddComponent<MiningCrackOverlay>();
+            var backpack = playerGo.AddComponent<InventoryUI>();
 
             // --- Camera (parented to player so it follows) -------------------
             Camera cam = Camera.main;
@@ -140,6 +141,10 @@ namespace Doodgy.EditorTools
             for (int i = 0; i < crackFrames.Length; i++)
                 cf.GetArrayElementAtIndex(i).objectReferenceValue = crackFrames[i];
             crackSo.ApplyModifiedPropertiesWithoutUndo();
+
+            var backpackSo = new SerializedObject(backpack);
+            backpackSo.FindProperty("slotFrame").objectReferenceValue = EditorSpriteUtil.LoadSprite(UI + "SlotFrame.aseprite");
+            backpackSo.ApplyModifiedPropertiesWithoutUndo();
 
             Selection.activeGameObject = worldGo;
 

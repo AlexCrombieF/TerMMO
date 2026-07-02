@@ -64,15 +64,15 @@ namespace Doodgy.EditorTools
             ItemData itStonePick = LoadOrCreate<ItemData>(Items + "Item_StonePickaxe.asset");
 
             // --- configure items ---
-            Item(itDirt,  10, "Dirt",        dirtSpr,   ItemCategory.TileBlock, 999, dirtTile);
-            Item(itStone, 11, "Stone",       stoneSpr,  ItemCategory.TileBlock, 999, stoneTile);
-            Item(itGrass, 12, "Grass Block", grassSpr,  ItemCategory.TileBlock, 999, grassTile);
-            Item(itIron,  13, "Iron Ore",    ironSpr,   ItemCategory.Material,  999, null);
-            Item(itCoal,  17, "Coal",        coalSpr,   ItemCategory.Material,  999, null);
-            Item(itWood,  14, "Wood",        trunkSpr,  ItemCategory.Material,  999, null);
-            Item(itPlanks,15, "Wood Planks", planksSpr, ItemCategory.TileBlock, 999, planksTile);
-            Item(itTorch, 16, "Torch",       torchSpr,  ItemCategory.TileBlock, 999, torchTile);
-            Item(itBench, 18, "Workbench",   benchSpr,  ItemCategory.TileBlock, 99,  null);
+            Item(itDirt,  10, "Dirt",        dirtSpr,   ItemCategory.TileBlock, 100, dirtTile);
+            Item(itStone, 11, "Stone",       stoneSpr,  ItemCategory.TileBlock, 100, stoneTile);
+            Item(itGrass, 12, "Grass Block", grassSpr,  ItemCategory.TileBlock, 100, grassTile);
+            Item(itIron,  13, "Iron Ore",    ironSpr,   ItemCategory.Material,  100, null);
+            Item(itCoal,  17, "Coal",        coalSpr,   ItemCategory.Material,  100, null);
+            Item(itWood,  14, "Wood",        trunkSpr,  ItemCategory.Material,  100, null);
+            Item(itPlanks,15, "Wood Planks", planksSpr, ItemCategory.TileBlock, 100, planksTile);
+            Item(itTorch, 16, "Torch",       torchSpr,  ItemCategory.TileBlock, 100, torchTile);
+            Item(itBench, 18, "Workbench",   benchSpr,  ItemCategory.TileBlock, 100, null);
             SetObject(itBench, benchSpr, 2, 1, "Workbench"); // placed as a 2x1 object
             Tool(itPick,      20, "Wooden Pickaxe", pickSpr,      ToolType.Pickaxe, 1, 2.2f, 5f);
             Tool(itAxe,       21, "Wooden Axe",     axeSpr,       ToolType.Axe,     1, 3f,   5f);
