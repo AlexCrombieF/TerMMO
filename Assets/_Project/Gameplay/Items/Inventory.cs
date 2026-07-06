@@ -92,6 +92,14 @@ namespace Doodgy.Gameplay
 
         public bool HasItems(ItemData item, int count) => CountOf(item) >= count;
 
+        /// <summary>True when every slot is empty.</summary>
+        public bool IsEmpty()
+        {
+            for (int i = 0; i < _slots.Length; i++)
+                if (!_slots[i].IsEmpty) return false;
+            return true;
+        }
+
         /// <summary>Removes <paramref name="count"/> of an item spread across slots; false if not enough.</summary>
         public bool Consume(ItemData item, int count)
         {

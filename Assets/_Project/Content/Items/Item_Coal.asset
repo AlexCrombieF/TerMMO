@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: Item_Coal
   m_EditorClassIdentifier: 
   id: 17
-  displayName: Coal
+  displayName: Raw Coal
   description: 
-  icon: {fileID: 5791689598210928568, guid: 5b4d7b1056182ac4db7bb671974b6051, type: 3}
+  icon: {fileID: -9155387673042838813, guid: 6a4bc9bfb8cd70e489322f9a1b208881, type: 3}
   category: 0
   rarity: 0
-  maxStackSize: 999
+  maxStackSize: 100
   placesTile: {fileID: 0}
   toolType: 0
   toolTier: 0
@@ -27,3 +27,4 @@ MonoBehaviour:
   objectSprite: {fileID: 0}
   objectSize: {x: 1, y: 1}
   objectKind: 
+  objectAltSprite: {fileID: 0}

@@ -18,6 +18,9 @@ namespace Doodgy.Gameplay
 
         private static readonly List<PlacedObject> All = new List<PlacedObject>();
 
+        /// <summary>Every live placed object (save system iterates this).</summary>
+        public static IReadOnlyList<PlacedObject> Registry => All;
+
         private void OnEnable() => All.Add(this);
         private void OnDisable() => All.Remove(this);
 
@@ -69,6 +72,15 @@ namespace Doodgy.Gameplay
             var po = root.AddComponent<PlacedObject>();
             po.Kind = item.ObjectKind;
             po.Source = item;
+
+            // Kind-specific behaviour. Data stays in ItemData; only the behaviour
+            // component is chosen here.
+            switch (po.Kind)
+            {
+                case "Chest": root.AddComponent<ChestObject>(); break;
+                case "Door": root.AddComponent<DoorObject>(); break;
+            }
+
             return root;
         }
     }

@@ -90,8 +90,38 @@ namespace Doodgy.Gameplay
             if (!HandleChop(mouse, tile))
                 HandleMining(mouse, tile);
 
-            if (mouse.rightButton.wasPressedThisFrame)
+            // Right-click: interact with doors/chests first, otherwise place.
+            if (mouse.rightButton.wasPressedThisFrame && !TryInteractObject(mouse, tile))
                 TryPlace(tile);
+        }
+
+        /// <summary>Right-click interactions on placed objects (door toggle, chest open).</summary>
+        private bool TryInteractObject(Mouse mouse, Vector2Int tile)
+        {
+            Vector3 wp = worldCamera.ScreenToWorldPoint(mouse.position.ReadValue());
+            wp.z = 0f;
+            Collider2D col = Physics2D.OverlapPoint(wp);
+            if (col == null) return false;
+
+            DoorObject door = col.GetComponent<DoorObject>();
+            if (door != null)
+            {
+                if (InReach(tile)) door.Toggle();
+                return true;
+            }
+
+            ChestObject chest = col.GetComponent<ChestObject>();
+            if (chest != null)
+            {
+                if (InReach(tile))
+                {
+                    var ui = GetComponent<InventoryUI>();
+                    if (ui != null) ui.ToggleChest(chest);
+                }
+                return true;
+            }
+
+            return false;
         }
 
         private bool TryPickUpObject(Mouse mouse, Vector2Int tile)
@@ -102,6 +132,14 @@ namespace Doodgy.Gameplay
             PlacedObject po = col != null ? col.GetComponent<PlacedObject>() : null;
             if (po == null) return false;
             if (!InReach(tile)) return true; // clicked but out of reach — consume the click
+
+            // A chest must be emptied before it can be picked up (no item loss).
+            ChestObject chest = po.GetComponent<ChestObject>();
+            if (chest != null && !chest.Inventory.IsEmpty())
+            {
+                Debug.Log("[World] Empty the chest before picking it up.");
+                return true;
+            }
 
             if (po.Source != null && inventory != null)
                 ItemPickup.Spawn(po.Source, 1, po.transform.position, inventory);
@@ -121,12 +159,12 @@ namespace Doodgy.Gameplay
             Choppable tree = col != null ? col.GetComponent<Choppable>() : null;
             if (tree == null) { _chopTarget = null; return false; }
 
-            ResetMining(); // we're on a tree, not a tile
+            ResetMining(); // we're on a tree/decoration, not a tile
             _chopTarget = null;
             if (InReach(tile))
             {
                 GetToolStats(out ToolType toolType, out _, out float power);
-                if (toolType == ToolType.Axe)
+                if (tree.CanChopWith(toolType))
                 {
                     _chopTarget = tree;
                     _chopTile = tile;

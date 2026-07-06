@@ -62,6 +62,10 @@ namespace Doodgy.Data
         [Tooltip("Identifier used by systems that look for this object, e.g. \"Workbench\".")]
         [SerializeField] private string objectKind = "";
 
+        [Tooltip("Optional alternate-state sprite for the placed object " +
+                 "(e.g. the door's OPEN art). Same canvas size as the main sprite.")]
+        [SerializeField] private Sprite objectAltSprite;
+
         // --- Read-only public API. Data is authored, never mutated at runtime. ---
         public int Id => id;
         public string DisplayName => displayName;
@@ -80,6 +84,7 @@ namespace Doodgy.Data
         public Sprite ObjectSprite => objectSprite;
         public Vector2Int ObjectSize => objectSize;
         public string ObjectKind => objectKind;
+        public Sprite ObjectAltSprite => objectAltSprite;
         public bool IsPlaceableObject => objectSprite != null && !string.IsNullOrEmpty(objectKind);
 
 #if UNITY_EDITOR

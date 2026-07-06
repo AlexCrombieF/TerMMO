@@ -69,6 +69,18 @@ namespace Doodgy.EditorTools
             treeSo.FindProperty("woodItem").objectReferenceValue = AssetDatabase.LoadAssetAtPath<ItemData>(Items + "Item_Wood.asset");
             treeSo.ApplyModifiedPropertiesWithoutUndo();
 
+            // Surface decorations: uses every sprite dropped into Content/Decor.
+            var decor = worldGo.AddComponent<DecorationSpawner>();
+            var decorSo = new SerializedObject(decor);
+            decorSo.FindProperty("world").objectReferenceValue = world;
+            string[] decorGuids = AssetDatabase.FindAssets("t:Sprite", new[] { "Assets/_Project/Content/Decor" });
+            SerializedProperty dsArr = decorSo.FindProperty("sprites");
+            dsArr.arraySize = decorGuids.Length;
+            for (int i = 0; i < decorGuids.Length; i++)
+                dsArr.GetArrayElementAtIndex(i).objectReferenceValue =
+                    EditorSpriteUtil.LoadSprite(AssetDatabase.GUIDToAssetPath(decorGuids[i]));
+            decorSo.ApplyModifiedPropertiesWithoutUndo();
+
             // --- Player ------------------------------------------------------
             var playerGo = new GameObject("Player");
             Undo.RegisterCreatedObjectUndo(playerGo, "Create Player");
@@ -86,6 +98,7 @@ namespace Doodgy.EditorTools
             var craft = playerGo.AddComponent<CraftingPanel>();
             var cracks = playerGo.AddComponent<MiningCrackOverlay>();
             var backpack = playerGo.AddComponent<InventoryUI>();
+            var saves = playerGo.AddComponent<SaveSystem>();
 
             // --- Camera (parented to player so it follows) -------------------
             Camera cam = Camera.main;
@@ -116,7 +129,6 @@ namespace Doodgy.EditorTools
 
             var craftSo = new SerializedObject(craft);
             craftSo.FindProperty("world").objectReferenceValue = world;
-            craftSo.FindProperty("workbenchTileId").intValue = 8;
             craftSo.FindProperty("slotFrame").objectReferenceValue = EditorSpriteUtil.LoadSprite(UI + "SlotFrame.aseprite");
             string[] recipeGuids = AssetDatabase.FindAssets("t:Recipe", new[] { "Assets/_Project/Content/Recipes" });
             SerializedProperty rp = craftSo.FindProperty("recipes");
@@ -146,6 +158,12 @@ namespace Doodgy.EditorTools
             backpackSo.FindProperty("slotFrame").objectReferenceValue = EditorSpriteUtil.LoadSprite(UI + "SlotFrame.aseprite");
             backpackSo.ApplyModifiedPropertiesWithoutUndo();
 
+            var savesSo = new SerializedObject(saves);
+            savesSo.FindProperty("world").objectReferenceValue = world;
+            savesSo.FindProperty("itemDatabase").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<ItemDatabase>("Assets/_Project/Content/Databases/ItemDatabase.asset");
+            savesSo.ApplyModifiedPropertiesWithoutUndo();
+
             Selection.activeGameObject = worldGo;
 
             EditorUtility.DisplayDialog("Doodgy",
@@ -154,7 +172,8 @@ namespace Doodgy.EditorTools
                 "  Move: A/D  -  Jump: Space\n" +
                 "  Mine: hold Left-click  -  Place: Right-click\n" +
                 "  Chop trees: select Axe, hold Left-click\n" +
-                "  Hotbar: number keys / scroll wheel  -  Craft: C\n\n" +
+                "  Hotbar: number keys / scroll wheel  -  Craft: C\n" +
+                "  Backpack: E  -  Save: F5  -  Load: F9\n\n" +
                 "Save the scene (Ctrl+S) to keep it.", "OK");
         }
 

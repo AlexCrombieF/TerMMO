@@ -19,4 +19,4 @@ MonoBehaviour:
     count: 5
   output: {fileID: 11400000, guid: 61f21c0fe1ebcf742888ae5d0d62e5fb, type: 2}
   outputCount: 1
-  requiresWorkbench: 1
+  requiredStation: Workbench

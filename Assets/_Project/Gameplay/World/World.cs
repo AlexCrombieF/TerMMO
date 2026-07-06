@@ -62,6 +62,9 @@ namespace Doodgy.Gameplay
 
         public int Seed => seed;
 
+        /// <summary>All loaded chunks (save system iterates these for dirty ones).</summary>
+        public IEnumerable<Chunk> Chunks => _chunks.Values;
+
         private void Start()
         {
             if (tileDatabase == null)
@@ -172,6 +175,30 @@ namespace Doodgy.Gameplay
 
             OnWorldGenerated?.Invoke();
         }
+
+        /// <summary>Regenerates from an explicit seed (used by the save system on load).</summary>
+        public void GenerateWorld(int explicitSeed)
+        {
+            randomizeSeed = false;
+            seed = explicitSeed;
+            GenerateWorld();
+        }
+
+        /// <summary>
+        /// Overwrites a chunk's tiles wholesale (save-load path) and redraws it.
+        /// Marks the chunk dirty so it re-saves. Does NOT raise per-tile events —
+        /// call <see cref="NotifyWorldRefreshed"/> once after all chunks are applied.
+        /// </summary>
+        public void ApplyChunkData(Vector2Int cc, ushort[] tiles)
+        {
+            if (!_chunks.TryGetValue(cc, out Chunk chunk)) return;
+            System.Array.Copy(tiles, chunk.Raw, WorldConstants.TilesPerChunk);
+            chunk.MarkDirty();
+            _renderers[cc].RenderAll(chunk, tileDatabase, _resolver);
+        }
+
+        /// <summary>Re-raises OnWorldGenerated so lighting/trees rebuild after a bulk load.</summary>
+        public void NotifyWorldRefreshed() => OnWorldGenerated?.Invoke();
 
         private void ClearWorld()
         {

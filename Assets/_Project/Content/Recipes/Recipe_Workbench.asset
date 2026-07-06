@@ -17,4 +17,4 @@ MonoBehaviour:
     count: 10
   output: {fileID: 11400000, guid: 43e8aa85b8cd2c34782aeb3f20677128, type: 2}
   outputCount: 1
-  requiresWorkbench: 0
+  requiredStation: 

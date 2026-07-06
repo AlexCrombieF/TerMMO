@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: Item_IronOre
   m_EditorClassIdentifier: 
   id: 13
-  displayName: Iron Ore
+  displayName: Raw Iron
   description: 
-  icon: {fileID: 4151865287723884444, guid: df5bdf2c2af652a43be703e10685abda, type: 3}
+  icon: {fileID: 6656413062834219922, guid: c1684a04f1af8d74b8cd165560edcae1, type: 3}
   category: 0
   rarity: 0
-  maxStackSize: 999
+  maxStackSize: 100
   placesTile: {fileID: 0}
   toolType: 0
   toolTier: 0
@@ -27,3 +27,4 @@ MonoBehaviour:
   objectSprite: {fileID: 0}
   objectSize: {x: 1, y: 1}
   objectKind: 
+  objectAltSprite: {fileID: 0}

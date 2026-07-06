@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f70717f7d7f6764d896012f27e63d97, type: 3}
+  m_Name: Item_Chest
+  m_EditorClassIdentifier: 
+  id: 24
+  displayName: Chest
+  description: 
+  icon: {fileID: -4660467218290606880, guid: ad7a8f20c63b75b45b073bc7a940e3b5, type: 3}
+  category: 1
+  rarity: 0
+  maxStackSize: 100
+  placesTile: {fileID: 0}
+  toolType: 0
+  toolTier: 0
+  miningPower: 1
+  reach: 4
+  objectSprite: {fileID: -4660467218290606880, guid: ad7a8f20c63b75b45b073bc7a940e3b5, type: 3}
+  objectSize: {x: 2, y: 1}
+  objectKind: Chest
+  objectAltSprite: {fileID: 0}

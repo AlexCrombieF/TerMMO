@@ -20,7 +20,6 @@ namespace Doodgy.Gameplay
     {
         [SerializeField] private Recipe[] recipes;
         [SerializeField] private World world;
-        [SerializeField] private ushort workbenchTileId = 8;
         [SerializeField] private float stationRange = 5f;
         [SerializeField] private Sprite slotFrame;
 
@@ -167,19 +166,18 @@ namespace Doodgy.Gameplay
 
         private void Refresh()
         {
-            bool benchNear = WorkbenchNearby();
             int visible = 0;
 
             for (int i = 0; i < _rows.Count; i++)
             {
                 Recipe r = recipes[i];
-                bool unlocked = r != null && (!r.requiresWorkbench || benchNear);
+                bool unlocked = r != null && StationSatisfied(r);
                 _rows[i].gameObject.SetActive(unlocked);
                 if (!unlocked) continue;
 
                 _rows[i].anchoredPosition = new Vector2(0f, -(Pad + visible * (RowH + Pad)));
 
-                bool can = CanCraft(r, benchNear);
+                bool can = CanCraft(r);
                 _buttons[i].interactable = can;
                 _labels[i].color = can ? Color.white : new Color(1f, 1f, 1f, 0.4f);
                 visible++;
@@ -188,10 +186,15 @@ namespace Doodgy.Gameplay
             _panelRect.sizeDelta = new Vector2(Width, visible * (RowH + Pad) + Pad);
         }
 
-        private bool CanCraft(Recipe r, bool benchNear)
+        /// <summary>True when the recipe's station (workbench/furnace/...) is nearby, or none is needed.</summary>
+        private bool StationSatisfied(Recipe r)
+            => string.IsNullOrEmpty(r.requiredStation)
+               || PlacedObject.AnyNear(r.requiredStation, transform.position, stationRange);
+
+        private bool CanCraft(Recipe r)
         {
             if (r == null || r.output == null) return false;
-            if (r.requiresWorkbench && !benchNear) return false;
+            if (!StationSatisfied(r)) return false;
             if (r.inputs != null)
                 foreach (Recipe.Ingredient ing in r.inputs)
                     if (ing.item == null || !_inv.Inventory.HasItems(ing.item, ing.count)) return false;
@@ -200,14 +203,11 @@ namespace Doodgy.Gameplay
 
         private void TryCraft(Recipe r)
         {
-            if (!CanCraft(r, WorkbenchNearby())) return;
+            if (!CanCraft(r)) return;
             foreach (Recipe.Ingredient ing in r.inputs)
                 _inv.Inventory.Consume(ing.item, ing.count);
             _inv.Inventory.Add(r.output, r.outputCount);
             Refresh();
         }
-
-        private bool WorkbenchNearby()
-            => PlacedObject.AnyNear("Workbench", transform.position, stationRange);
     }
 }

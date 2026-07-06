@@ -21,7 +21,8 @@ namespace Doodgy.Data
         public ItemData output;
         [Min(1)] public int outputCount = 1;
 
-        [Tooltip("If true, the player must be near a placed workbench to craft this.")]
-        public bool requiresWorkbench;
+        [Tooltip("Placed-object kind the player must be near to craft this " +
+                 "(\"Workbench\", \"Furnace\", ...). Empty = craftable anywhere.")]
+        public string requiredStation = "";
     }
 }

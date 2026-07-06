@@ -18,7 +18,7 @@ MonoBehaviour:
   icon: {fileID: 4524294956735625351, guid: 54a4ccbb3199d3247bfc53ef78e3f828, type: 3}
   category: 1
   rarity: 0
-  maxStackSize: 999
+  maxStackSize: 100
   placesTile: {fileID: 11400000, guid: b2c3d4e5f60718293a4b5c6d7e8f9001, type: 2}
   toolType: 0
   toolTier: 0
@@ -27,3 +27,4 @@ MonoBehaviour:
   objectSprite: {fileID: 0}
   objectSize: {x: 1, y: 1}
   objectKind: 
+  objectAltSprite: {fileID: 0}

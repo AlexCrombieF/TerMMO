@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f70717f7d7f6764d896012f27e63d97, type: 3}
+  m_Name: Item_Door
+  m_EditorClassIdentifier: 
+  id: 23
+  displayName: Door
+  description: 
+  icon: {fileID: 4795455929860361961, guid: 0a6b2093e3b7759468cfda6b01ee0994, type: 3}
+  category: 1
+  rarity: 0
+  maxStackSize: 100
+  placesTile: {fileID: 0}
+  toolType: 0
+  toolTier: 0
+  miningPower: 1
+  reach: 4
+  objectSprite: {fileID: 4795455929860361961, guid: 0a6b2093e3b7759468cfda6b01ee0994, type: 3}
+  objectSize: {x: 1, y: 3}
+  objectKind: Door
+  objectAltSprite: {fileID: -3451410940433344085, guid: 5dd973c3bc42ea546b11610def0e1e44, type: 3}
