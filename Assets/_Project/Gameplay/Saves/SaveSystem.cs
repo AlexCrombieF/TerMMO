@@ -26,7 +26,7 @@ namespace Doodgy.Gameplay
     public sealed class SaveSystem : MonoBehaviour
     {
         private const string Magic = "DGY1";
-        private const int Version = 2; // v2: placed objects carry chest contents
+        private const int Version = 3; // v2: storage contents; v3: player appearance
 
         [SerializeField] private World world;
         [SerializeField] private ItemDatabase itemDatabase;
@@ -96,20 +96,28 @@ namespace Doodgy.Gameplay
                     w.Write(o.transform.position.x);
                     w.Write(o.transform.position.y);
 
-                    // v2: chests carry their contents.
-                    ChestObject chest = o.GetComponent<ChestObject>();
-                    w.Write(chest != null);
-                    if (chest != null)
+                    // v2: storage objects (chest, furnace) carry their contents.
+                    var holder = o.GetComponent<IHasInventory>();
+                    w.Write(holder != null);
+                    if (holder != null)
                     {
-                        w.Write(chest.Inventory.Size);
-                        for (int s = 0; s < chest.Inventory.Size; s++)
+                        w.Write(holder.Inventory.Size);
+                        for (int s = 0; s < holder.Inventory.Size; s++)
                         {
-                            ItemStack stack = chest.Inventory.Get(s);
+                            ItemStack stack = holder.Inventory.Get(s);
                             w.Write(stack.IsEmpty ? 0 : stack.Item.Id);
                             w.Write(stack.IsEmpty ? 0 : stack.Count);
                         }
                     }
                 }
+
+                // v3: player appearance.
+                var look = GetComponent<PlayerAppearanceRenderer>();
+                PlayerAppearance a = look != null ? look.Current : PlayerAppearance.Default;
+                w.Write(a.hairStyle);
+                WriteColor(w, a.skinColor);
+                WriteColor(w, a.hairColor);
+                WriteColor(w, a.eyeColor);
             }
 
             Debug.Log($"[Save] Saved to {SavePath}");
@@ -197,21 +205,35 @@ namespace Doodgy.Gameplay
                         spawned = PlacedObject.Spawn(item, bl);
                     }
 
-                    // v2: chest contents follow the object entry.
+                    // v2: storage contents follow the object entry.
                     if (version >= 2 && r.ReadBoolean())
                     {
-                        int chestSlots = r.ReadInt32();
-                        ChestObject chest = spawned != null ? spawned.GetComponent<ChestObject>() : null;
-                        for (int s = 0; s < chestSlots; s++)
+                        int storageSlots = r.ReadInt32();
+                        var holder = spawned != null ? spawned.GetComponent<IHasInventory>() : null;
+                        for (int s = 0; s < storageSlots; s++)
                         {
                             int itemId = r.ReadInt32();
                             int count = r.ReadInt32();
-                            if (chest == null || s >= chest.Inventory.Size) continue;
+                            if (holder == null || s >= holder.Inventory.Size) continue;
                             ItemData stackItem = itemDatabase != null ? itemDatabase.Get(itemId) : null;
-                            chest.Inventory.SetSlot(s, stackItem != null && count > 0
+                            holder.Inventory.SetSlot(s, stackItem != null && count > 0
                                 ? new ItemStack(stackItem, count) : ItemStack.Empty);
                         }
                     }
+                }
+
+                // v3: player appearance.
+                if (version >= 3)
+                {
+                    var a = new PlayerAppearance
+                    {
+                        hairStyle = r.ReadInt32(),
+                        skinColor = ReadColor(r),
+                        hairColor = ReadColor(r),
+                        eyeColor = ReadColor(r),
+                    };
+                    var look = GetComponent<PlayerAppearanceRenderer>();
+                    if (look != null) look.Apply(a);
                 }
             }
 
@@ -224,5 +246,13 @@ namespace Doodgy.Gameplay
 
             Debug.Log("[Save] Loaded.");
         }
+
+        private static void WriteColor(BinaryWriter w, Color c)
+        {
+            w.Write(c.r); w.Write(c.g); w.Write(c.b); w.Write(c.a);
+        }
+
+        private static Color ReadColor(BinaryReader r)
+            => new Color(r.ReadSingle(), r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
     }
 }

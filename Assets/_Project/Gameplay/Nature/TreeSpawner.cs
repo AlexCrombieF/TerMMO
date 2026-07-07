@@ -56,7 +56,10 @@ namespace Doodgy.Gameplay
             int x = 2;
             while (x < w - 2)
             {
-                if (rng.NextDouble() <= spawnChance && TryGetSurface(x, h, out int surfaceY))
+                // The stump is 3 tiles wide, so the tree needs locally flat ground —
+                // otherwise the base visually sinks into a slope.
+                if (rng.NextDouble() <= spawnChance && TryGetSurface(x, h, out int surfaceY)
+                    && IsFlat3(x, surfaceY, h))
                 {
                     int height = rng.Next(minHeight, maxHeight + 1);
                     BuildTree(x, surfaceY, height);
@@ -64,6 +67,10 @@ namespace Doodgy.Gameplay
                 x += rng.Next(minSpacing, maxSpacing + 1);
             }
         }
+
+        private bool IsFlat3(int x, int surfaceY, int h)
+            => TryGetSurface(x - 1, h, out int l) && l == surfaceY
+            && TryGetSurface(x + 1, h, out int r) && r == surfaceY;
 
         // Topmost solid tile in a column = the surface.
         private bool TryGetSurface(int x, int h, out int surfaceY)

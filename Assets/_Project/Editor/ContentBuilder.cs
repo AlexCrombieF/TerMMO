@@ -87,7 +87,9 @@ namespace Doodgy.EditorTools
             Item(itBench, 18, "Workbench",   benchSpr,  ItemCategory.TileBlock, 100, null);
             SetObject(itBench, benchSpr, 2, 1, "Workbench"); // placed as a 2x1 object
             Item(itDoor,  23, "Door",        doorSpr,   ItemCategory.TileBlock, 100, null);
-            SetObject(itDoor, doorSpr, 1, 3, "Door", doorOpenSpr); // 1x3, toggles open (alt = open art)
+            // 1x2 so the door reads right next to the 1.8-tile player. The art is
+            // 16x48 for now, so it compresses slightly — redraw at 16x32 for pixel-perfect.
+            SetObject(itDoor, doorSpr, 1, 2, "Door", doorOpenSpr);
             Item(itChest, 24, "Chest",       chestSpr,  ItemCategory.TileBlock, 100, null);
             SetObject(itChest, chestSpr, 2, 1, "Chest");     // 2x1 placed object, 30-slot storage
             Item(itIngot, 25, "Iron Ingot",  ingotSpr,  ItemCategory.Material,  100, null);
@@ -133,10 +135,19 @@ namespace Doodgy.EditorTools
                 itDoor, 1, "Workbench", (itWood, 6));
             SetRecipe(LoadOrCreate<Recipe>(Recipes + "Recipe_Furnace.asset"),
                 itFurnace, 1, "Workbench", (itStone, 25), (itCoal, 10), (itTorch, 1), (itWood, 10));
-            SetRecipe(LoadOrCreate<Recipe>(Recipes + "Recipe_IronIngot.asset"),
-                itIngot, 1, "Furnace", (itIron, 2), (itCoal, 1));
+            // Smelting moved into the furnace itself (input/fuel/output slots) —
+            // remove the old crafting-menu ingot recipe if it exists.
+            AssetDatabase.DeleteAsset(Recipes + "Recipe_IronIngot.asset");
             SetRecipe(LoadOrCreate<Recipe>(Recipes + "Recipe_Chest.asset"),
                 itChest, 1, "Workbench", (itIngot, 2), (itWood, 10));
+
+            // --- furnace data: what burns and what smelts ---
+            SetFuel(itWood, 4f);
+            SetFuel(itCoal, 12f);
+            SetSmelt(itIron, itIngot, 4f);
+
+            // --- torch animation from its Aseprite frames ---
+            SetTileAnimation(torchTile, EditorSpriteUtil.LoadAllSprites(Tiles + "Torch.aseprite"), 8f);
 
             RegisterAllTiles();
             RegisterAllItems();
@@ -218,6 +229,35 @@ namespace Doodgy.EditorTools
             so.FindProperty("objectAltSprite").objectReferenceValue = altSprite;
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(item);
+        }
+
+        private static void SetFuel(ItemData item, float seconds)
+        {
+            var so = new SerializedObject(item);
+            so.FindProperty("fuelSeconds").floatValue = seconds;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(item);
+        }
+
+        private static void SetSmelt(ItemData item, ItemData product, float seconds)
+        {
+            var so = new SerializedObject(item);
+            so.FindProperty("smeltsInto").objectReferenceValue = product;
+            so.FindProperty("smeltSeconds").floatValue = seconds;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(item);
+        }
+
+        private static void SetTileAnimation(TileData tile, Sprite[] frames, float fps)
+        {
+            var so = new SerializedObject(tile);
+            SerializedProperty arr = so.FindProperty("animationSprites");
+            arr.arraySize = frames != null ? frames.Length : 0;
+            for (int i = 0; i < arr.arraySize; i++)
+                arr.GetArrayElementAtIndex(i).objectReferenceValue = frames[i];
+            so.FindProperty("animationFps").floatValue = fps;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(tile);
         }
 
         private static void SetTint(TileData tile, Color c)

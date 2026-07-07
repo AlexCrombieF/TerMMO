@@ -7,7 +7,7 @@ namespace Doodgy.Gameplay
     /// The InventoryUI opens it alongside the backpack so stacks move between the
     /// two with the same cursor-stack controls. Contents persist via SaveSystem.
     /// </summary>
-    public sealed class ChestObject : MonoBehaviour
+    public sealed class ChestObject : MonoBehaviour, IHasInventory
     {
         public const int Slots = 30;
 

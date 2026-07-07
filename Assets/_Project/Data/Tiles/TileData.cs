@@ -42,6 +42,13 @@ namespace Doodgy.Data
                  "placeholder tile when no TileAsset/Sprite is assigned.")]
         [SerializeField] private Color tint = Color.white;
 
+        [Header("Animation (optional)")]
+        [Tooltip("2+ frames make the tile animate (e.g. torch flame). Overrides " +
+                 "Sprite when set. Wired by Build Content from the Aseprite frames.")]
+        [SerializeField] private Sprite[] animationSprites;
+        [Tooltip("Animation speed in frames per second.")]
+        [Min(0.1f)] [SerializeField] private float animationFps = 8f;
+
         [Header("Physical")]
         [Tooltip("If true the tile has collision and blocks movement/projectiles.")]
         [SerializeField] private bool isSolid = true;
@@ -83,6 +90,8 @@ namespace Doodgy.Data
         public TileBase TileAsset => tileAsset;
         public Sprite Sprite => sprite;
         public Color Tint => tint;
+        public Sprite[] AnimationSprites => animationSprites;
+        public float AnimationFps => animationFps;
         public bool IsSolid => isSolid;
         public float Hardness => hardness;
         public ToolType RequiredTool => requiredTool;

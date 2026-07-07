@@ -15,6 +15,12 @@ namespace Doodgy.Gameplay
         private const float MagnetRange = 2.5f;
         private const float CollectRange = 0.6f;
         private const float MagnetSpeed = 9f;
+        private const float MergeRange = 0.6f;
+        private const int PickupLayer = 10;       // unnamed user layer reserved for drops
+
+        private static readonly System.Collections.Generic.List<ItemPickup> All =
+            new System.Collections.Generic.List<ItemPickup>();
+        private static bool _layerConfigured;
 
         private ItemData _item;
         private int _count;
@@ -22,12 +28,24 @@ namespace Doodgy.Gameplay
         private Rigidbody2D _rb;
         private float _age;
 
+        private void OnEnable() => All.Add(this);
+        private void OnDisable() => All.Remove(this);
+
         public static void Spawn(ItemData item, int count, Vector3 pos, PlayerInventory target)
         {
             if (item == null || count <= 0) return;
 
             var go = new GameObject($"Pickup_{item.DisplayName}");
             go.transform.position = pos;
+
+            // Drops live on their own layer and never collide with each other —
+            // stops mined ore stacking into floating towers.
+            go.layer = PickupLayer;
+            if (!_layerConfigured)
+            {
+                Physics2D.IgnoreLayerCollision(PickupLayer, PickupLayer, true);
+                _layerConfigured = true;
+            }
 
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sortingOrder = 8;
@@ -66,7 +84,10 @@ namespace Doodgy.Gameplay
         private void Update()
         {
             _age += Time.deltaTime;
-            if (_target == null || _age < CollectDelay) return;
+            if (_age < CollectDelay) return;
+
+            MergeNearby();
+            if (_target == null) return;
 
             Vector3 playerPos = _target.transform.position;
             float dist = Vector2.Distance(transform.position, playerPos);
@@ -81,6 +102,22 @@ namespace Doodgy.Gameplay
 
             if (dist <= MagnetRange)
                 _rb.linearVelocity = ((Vector2)(playerPos - transform.position)).normalized * MagnetSpeed;
+        }
+
+        // Nearby drops of the same item combine into one (keeps the ground tidy).
+        private void MergeNearby()
+        {
+            for (int i = All.Count - 1; i >= 0; i--)
+            {
+                ItemPickup other = All[i];
+                if (other == this || other == null || other._item != _item) continue;
+                if (other._age < CollectDelay) continue;
+                if (Vector2.Distance(transform.position, other.transform.position) > MergeRange) continue;
+
+                _count += other._count;
+                Destroy(other.gameObject);
+                return; // one merge per frame is plenty
+            }
         }
     }
 }

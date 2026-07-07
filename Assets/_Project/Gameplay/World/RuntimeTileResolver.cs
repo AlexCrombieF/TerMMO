@@ -30,11 +30,38 @@ namespace Doodgy.Gameplay
 
             TileBase result;
             if (data.TileAsset != null) result = data.TileAsset;          // authored Tile/RuleTile
+            else if (data.AnimationSprites != null && data.AnimationSprites.Length > 1)
+                result = CreateAnimatedTile(data);                         // frame loop (torch)
             else if (data.Sprite != null) result = CreateSpriteTile(data); // raw sprite -> runtime tile
             else result = CreatePlaceholder(data);                         // colour fallback
 
             _cache[data.Id] = result;
             return result;
+        }
+
+        /// <summary>
+        /// Builds an animated tile from the TileData's frames. Frames are rebuilt
+        /// pixel-true at 16 px = 1 tile (a 12x20 torch slightly overhangs its cell,
+        /// which reads nicely for flames).
+        /// </summary>
+        private static AnimatedRuntimeTile CreateAnimatedTile(TileData data)
+        {
+            Sprite[] src = data.AnimationSprites;
+            var frames = new Sprite[src.Length];
+            for (int i = 0; i < src.Length; i++)
+            {
+                Sprite s = src[i];
+                frames[i] = Sprite.Create(s.texture, s.rect, new Vector2(0.5f, 0.5f),
+                                          PlaceholderPixels, 0, SpriteMeshType.FullRect);
+                frames[i].name = $"{data.DisplayName}_f{i}";
+            }
+
+            var tile = ScriptableObject.CreateInstance<AnimatedRuntimeTile>();
+            tile.Frames = frames;
+            tile.Fps = data.AnimationFps;
+            tile.Color = data.Tint;
+            tile.ColliderType = data.IsSolid ? Tile.ColliderType.Grid : Tile.ColliderType.None;
+            return tile;
         }
 
         /// <summary>Drops cached tiles so reassigned sprites are picked up on the next render.</summary>

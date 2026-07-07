@@ -24,19 +24,43 @@ namespace Doodgy.Gameplay
 
         private Transform _container;
 
+        // Ground tile -> the decoration standing on it, so mining the ground
+        // underneath pops the plant instead of leaving it floating.
+        private readonly System.Collections.Generic.Dictionary<Vector2Int, GameObject> _byGround =
+            new System.Collections.Generic.Dictionary<Vector2Int, GameObject>();
+
         private void OnEnable()
         {
-            if (world != null) world.OnWorldGenerated += Spawn;
+            if (world != null)
+            {
+                world.OnWorldGenerated += Spawn;
+                world.OnTileChanged += OnTileChanged;
+            }
         }
 
         private void OnDisable()
         {
-            if (world != null) world.OnWorldGenerated -= Spawn;
+            if (world != null)
+            {
+                world.OnWorldGenerated -= Spawn;
+                world.OnTileChanged -= OnTileChanged;
+            }
+        }
+
+        private void OnTileChanged(TileChangedEvent e)
+        {
+            if (!e.WasDestroyed) return;
+            if (_byGround.TryGetValue(e.Tile, out GameObject decor))
+            {
+                if (decor != null) Destroy(decor);
+                _byGround.Remove(e.Tile);
+            }
         }
 
         private void Spawn()
         {
             if (_container != null) Destroy(_container.gameObject);
+            _byGround.Clear();
             if (sprites == null || sprites.Length == 0) return; // no decor art yet
 
             _container = new GameObject("Decorations").transform;
@@ -100,6 +124,8 @@ namespace Doodgy.Gameplay
 
             var chop = go.AddComponent<Choppable>();
             chop.Configure(null, 1, 0.3f, go.transform.position, ToolType.None);
+
+            _byGround[new Vector2Int(x, surfaceY)] = go;
         }
     }
 }

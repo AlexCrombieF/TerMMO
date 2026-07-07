@@ -79,6 +79,7 @@ namespace Doodgy.Gameplay
             {
                 case "Chest": root.AddComponent<ChestObject>(); break;
                 case "Door": root.AddComponent<DoorObject>(); break;
+                case "Furnace": root.AddComponent<FurnaceObject>(); break;
             }
 
             return root;

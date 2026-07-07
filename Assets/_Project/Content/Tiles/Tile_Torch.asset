@@ -15,8 +15,16 @@ MonoBehaviour:
   id: 5
   displayName: Torch
   tileAsset: {fileID: 0}
-  sprite: {fileID: 7077204653017257807, guid: 1c3c0e0134c8f554796a286829e79a21, type: 3}
+  sprite: {fileID: -1960146835919721927, guid: 1c3c0e0134c8f554796a286829e79a21, type: 3}
   tint: {r: 1, g: 1, b: 1, a: 1}
+  animationSprites:
+  - {fileID: -1960146835919721927, guid: 1c3c0e0134c8f554796a286829e79a21, type: 3}
+  - {fileID: 7590911734415076022, guid: 1c3c0e0134c8f554796a286829e79a21, type: 3}
+  - {fileID: -9174979732369461950, guid: 1c3c0e0134c8f554796a286829e79a21, type: 3}
+  - {fileID: 3262034331584927314, guid: 1c3c0e0134c8f554796a286829e79a21, type: 3}
+  - {fileID: -57486372205427328, guid: 1c3c0e0134c8f554796a286829e79a21, type: 3}
+  - {fileID: 7077204653017257807, guid: 1c3c0e0134c8f554796a286829e79a21, type: 3}
+  animationFps: 8
   isSolid: 0
   hardness: 0.2
   requiredTool: 0

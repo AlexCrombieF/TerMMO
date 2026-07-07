@@ -28,3 +28,6 @@ MonoBehaviour:
   objectSize: {x: 2, y: 1}
   objectKind: Workbench
   objectAltSprite: {fileID: 0}
+  fuelSeconds: 0
+  smeltsInto: {fileID: 0}
+  smeltSeconds: 4

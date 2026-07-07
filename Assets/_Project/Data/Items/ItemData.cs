@@ -66,6 +66,14 @@ namespace Doodgy.Data
                  "(e.g. the door's OPEN art). Same canvas size as the main sprite.")]
         [SerializeField] private Sprite objectAltSprite;
 
+        [Header("Furnace (optional)")]
+        [Tooltip("Seconds of burn time this item provides as furnace fuel. 0 = not fuel.")]
+        [Min(0f)] [SerializeField] private float fuelSeconds = 0f;
+        [Tooltip("Item produced when this is smelted in a furnace. Null = not smeltable.")]
+        [SerializeField] private ItemData smeltsInto;
+        [Tooltip("Seconds of burn needed to smelt one unit.")]
+        [Min(0.1f)] [SerializeField] private float smeltSeconds = 4f;
+
         // --- Read-only public API. Data is authored, never mutated at runtime. ---
         public int Id => id;
         public string DisplayName => displayName;
@@ -86,6 +94,11 @@ namespace Doodgy.Data
         public string ObjectKind => objectKind;
         public Sprite ObjectAltSprite => objectAltSprite;
         public bool IsPlaceableObject => objectSprite != null && !string.IsNullOrEmpty(objectKind);
+        public float FuelSeconds => fuelSeconds;
+        public ItemData SmeltsInto => smeltsInto;
+        public float SmeltSeconds => smeltSeconds;
+        public bool IsFuel => fuelSeconds > 0f;
+        public bool IsSmeltable => smeltsInto != null;
 
 #if UNITY_EDITOR
         // virtual so subclasses (WeaponItemData, etc.) can extend validation.

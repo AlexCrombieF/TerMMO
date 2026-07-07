@@ -99,6 +99,8 @@ namespace Doodgy.EditorTools
             var cracks = playerGo.AddComponent<MiningCrackOverlay>();
             var backpack = playerGo.AddComponent<InventoryUI>();
             var saves = playerGo.AddComponent<SaveSystem>();
+            var look = playerGo.AddComponent<PlayerAppearanceRenderer>();
+            var creator = playerGo.AddComponent<CharacterCreationUI>();
 
             // --- Camera (parented to player so it follows) -------------------
             Camera cam = Camera.main;
@@ -163,6 +165,31 @@ namespace Doodgy.EditorTools
             savesSo.FindProperty("itemDatabase").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<ItemDatabase>("Assets/_Project/Content/Databases/ItemDatabase.asset");
             savesSo.ApplyModifiedPropertiesWithoutUndo();
+
+            // Character appearance layers (empty until the art is drawn — the
+            // creator falls back to a tinted placeholder).
+            const string PlayerArt = "Assets/_Project/Content/Player/";
+            var lookSo = new SerializedObject(look);
+            lookSo.FindProperty("bodySprite").objectReferenceValue = EditorSpriteUtil.LoadSprite(PlayerArt + "PlayerBody.aseprite");
+            lookSo.FindProperty("clothesSprite").objectReferenceValue = EditorSpriteUtil.LoadSprite(PlayerArt + "PlayerClothes.aseprite");
+            lookSo.FindProperty("eyesBaseSprite").objectReferenceValue = EditorSpriteUtil.LoadSprite(PlayerArt + "PlayerEyesBase.aseprite");
+            lookSo.FindProperty("eyesSprite").objectReferenceValue = EditorSpriteUtil.LoadSprite(PlayerArt + "PlayerEyes.aseprite");
+            string[] hairGuids = AssetDatabase.FindAssets("Hair t:Sprite", new[] { "Assets/_Project/Content/Player" });
+            SerializedProperty hairArr = lookSo.FindProperty("hairStyles");
+            hairArr.arraySize = hairGuids.Length;
+            for (int i = 0; i < hairGuids.Length; i++)
+                hairArr.GetArrayElementAtIndex(i).objectReferenceValue =
+                    EditorSpriteUtil.LoadSprite(AssetDatabase.GUIDToAssetPath(hairGuids[i]));
+            lookSo.ApplyModifiedPropertiesWithoutUndo();
+
+            // Gameplay is locked until the character creator's Start is pressed.
+            var creatorSo = new SerializedObject(creator);
+            SerializedProperty dis = creatorSo.FindProperty("disableWhileOpen");
+            var toDisable = new Behaviour[] { playerGo.GetComponent<PlayerController>(), edit, inv, backpack, craft, saves };
+            dis.arraySize = toDisable.Length;
+            for (int i = 0; i < toDisable.Length; i++)
+                dis.GetArrayElementAtIndex(i).objectReferenceValue = toDisable[i];
+            creatorSo.ApplyModifiedPropertiesWithoutUndo();
 
             Selection.activeGameObject = worldGo;
 

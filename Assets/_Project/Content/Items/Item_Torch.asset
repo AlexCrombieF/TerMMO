@@ -15,7 +15,7 @@ MonoBehaviour:
   id: 16
   displayName: Torch
   description: 
-  icon: {fileID: 7077204653017257807, guid: 1c3c0e0134c8f554796a286829e79a21, type: 3}
+  icon: {fileID: -1960146835919721927, guid: 1c3c0e0134c8f554796a286829e79a21, type: 3}
   category: 1
   rarity: 0
   maxStackSize: 100
@@ -28,3 +28,6 @@ MonoBehaviour:
   objectSize: {x: 1, y: 1}
   objectKind: 
   objectAltSprite: {fileID: 0}
+  fuelSeconds: 0
+  smeltsInto: {fileID: 0}
+  smeltSeconds: 4

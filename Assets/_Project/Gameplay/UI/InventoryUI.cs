@@ -3,44 +3,59 @@ using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
-using Doodgy.Data;
 
 namespace Doodgy.Gameplay
 {
     /// <summary>
-    /// Inventory UI hosting up to two grids that share one cursor stack:
-    ///   - the player's backpack (toggle with E)
-    ///   - an open chest's contents (right-click a chest; shown above the backpack)
-    /// Left-click picks up / places / swaps a whole stack, right-click splits half
-    /// or places one — including across grids, which is how items move between the
-    /// player and a chest. Built entirely in code.
+    /// Inventory UI hosting the player's backpack plus one open station panel
+    /// (chest or furnace), all sharing a single cursor stack.
+    ///
+    /// Controls: E toggles the backpack. Right-clicking a chest/furnace in the
+    /// world opens its panel above the backpack. Move items by CLICK (pick /
+    /// place / swap; right-click splits half / places one) or by DRAG & DROP —
+    /// drag a stack from any slot and release it over another; releasing
+    /// anywhere else returns it to the source slot. Built entirely in code.
     /// </summary>
     [RequireComponent(typeof(PlayerInventory))]
     public sealed class InventoryUI : MonoBehaviour
     {
+        public enum PanelKind { Player, Chest, Furnace }
+
         [SerializeField] private Sprite slotFrame;
         [SerializeField] private int columns = 10;
-        [SerializeField] private int slotSize = 64;
-        [SerializeField] private int spacing = 4;
-        [Tooltip("Chest auto-closes beyond this distance (tiles).")]
-        [SerializeField] private float chestRange = 6f;
+        [SerializeField] private int slotSize = 52;
+        [SerializeField] private int spacing = 6;
+        [Tooltip("Open station (chest/furnace) auto-closes beyond this distance (tiles).")]
+        [SerializeField] private float stationRange = 6f;
+
+        private static readonly Color PanelColor = new Color(0.07f, 0.08f, 0.11f, 0.92f);
+        private static readonly Color HeaderColor = new Color(1f, 1f, 1f, 0.55f);
+        private const int Pad = 12;
+        private const int HeaderH = 22;
+        private const int HotbarGap = 10; // extra gap under the hotbar row
 
         private PlayerInventory _player;
         private Canvas _canvas;
+        private Font _font;
         private bool _open;
 
         private GridPanel _playerGrid;
         private GridPanel _chestGrid;
-        private ChestObject _openChest;
+        private GridPanel _furnaceGrid;
+        private Text _furnaceStatus;
 
-        // The stack currently held on the cursor.
+        private ChestObject _openChest;
+        private FurnaceObject _openFurnace;
+
+        // Cursor stack + drag state.
         private ItemStack _cursor;
         private RectTransform _ghost;
         private Image _ghostIcon;
         private Text _ghostCount;
-        private Font _font;
+        private bool _dragging;
+        private PanelKind _dragSourcePanel;
+        private int _dragSourceIndex;
 
-        /// <summary>One grid panel bound to an Inventory.</summary>
         private sealed class GridPanel
         {
             public GameObject Root;
@@ -50,10 +65,9 @@ namespace Doodgy.Gameplay
 
             public void Refresh()
             {
-                if (Bound == null) return;
                 for (int i = 0; i < Icons.Length; i++)
                 {
-                    ItemStack s = i < Bound.Size ? Bound.Get(i) : ItemStack.Empty;
+                    ItemStack s = Bound != null && i < Bound.Size ? Bound.Get(i) : ItemStack.Empty;
                     if (s.IsEmpty) { Icons[i].enabled = false; Counts[i].text = ""; }
                     else
                     {
@@ -73,9 +87,14 @@ namespace Doodgy.Gameplay
             _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             BuildCanvas();
 
-            _playerGrid = BuildGrid("Backpack", _player.Inventory.Size, anchorY: -80f);
+            _playerGrid = BuildGrid(PanelKind.Player, "Backpack", _player.Inventory.Size,
+                                    columns, new Vector2(0f, -60f), hotbarGapAfterRow0: true);
             _playerGrid.Bound = _player.Inventory;
-            _chestGrid = BuildGrid("Chest", ChestObject.Slots, anchorY: 190f);
+
+            _chestGrid = BuildGrid(PanelKind.Chest, "Chest", ChestObject.Slots,
+                                   columns, new Vector2(0f, 190f), false);
+
+            _furnaceGrid = BuildFurnacePanel(new Vector2(0f, 190f));
 
             BuildGhost();
             _player.Inventory.Changed += RefreshAll;
@@ -86,7 +105,7 @@ namespace Doodgy.Gameplay
         {
             if (_player != null && _player.Inventory != null)
                 _player.Inventory.Changed -= RefreshAll;
-            UnbindChest();
+            UnbindStation();
         }
 
         private void Update()
@@ -94,77 +113,150 @@ namespace Doodgy.Gameplay
             Keyboard kb = Keyboard.current;
             if (kb != null && kb.eKey.wasPressedThisFrame) SetOpen(!_open);
 
-            // Walking away from an open chest closes it.
-            if (_openChest != null)
-            {
-                if (_openChest == null ||
-                    Vector2.Distance(transform.position, _openChest.transform.position) > chestRange)
-                    CloseChest();
-            }
+            // Walking away from an open station closes it.
+            Transform station = _openChest != null ? _openChest.transform
+                              : _openFurnace != null ? _openFurnace.transform : null;
+            if (station != null &&
+                Vector2.Distance(transform.position, station.position) > stationRange)
+                CloseStation();
 
-            if (_open && Mouse.current != null)
+            if (_open)
             {
-                _ghost.position = Mouse.current.position.ReadValue();
+                if (Mouse.current != null)
+                    _ghost.position = Mouse.current.position.ReadValue();
                 UpdateGhost();
+                if (_openFurnace != null) UpdateFurnaceStatus();
             }
         }
 
-        // ------------------------------------------------------------- open/close
+        // ---------------------------------------------------------- open/close
 
         public void ToggleChest(ChestObject chest)
         {
-            if (_openChest == chest) { CloseChest(); return; }
-
-            UnbindChest();
+            if (_openChest == chest) { CloseStation(); return; }
+            CloseStation();
             _openChest = chest;
             _chestGrid.Bound = chest.Inventory;
             chest.Inventory.Changed += RefreshAll;
+            OpenWithStation();
+        }
 
+        public void ToggleFurnace(FurnaceObject furnace)
+        {
+            if (_openFurnace == furnace) { CloseStation(); return; }
+            CloseStation();
+            _openFurnace = furnace;
+            _furnaceGrid.Bound = furnace.Inventory;
+            furnace.Inventory.Changed += RefreshAll;
+            OpenWithStation();
+        }
+
+        private void OpenWithStation()
+        {
             if (!_open) SetOpen(true);
-            else _chestGrid.Root.SetActive(true);
+            _chestGrid.Root.SetActive(_openChest != null);
+            _furnaceGrid.Root.SetActive(_openFurnace != null);
             RefreshAll();
         }
 
-        private void CloseChest()
+        private void CloseStation()
         {
-            UnbindChest();
+            UnbindStation();
             _openChest = null;
+            _openFurnace = null;
             _chestGrid.Bound = null;
-            if (_chestGrid.Root != null) _chestGrid.Root.SetActive(false);
+            _furnaceGrid.Bound = null;
+            if (_chestGrid?.Root != null) _chestGrid.Root.SetActive(false);
+            if (_furnaceGrid?.Root != null) _furnaceGrid.Root.SetActive(false);
         }
 
-        private void UnbindChest()
+        private void UnbindStation()
         {
-            if (_openChest != null && _openChest.Inventory != null)
-                _openChest.Inventory.Changed -= RefreshAll;
+            if (_openChest != null) _openChest.Inventory.Changed -= RefreshAll;
+            if (_openFurnace != null) _openFurnace.Inventory.Changed -= RefreshAll;
         }
 
         private void SetOpen(bool open)
         {
             _open = open;
             _playerGrid.Root.SetActive(open);
-            _chestGrid.Root.SetActive(open && _openChest != null);
             _ghost.gameObject.SetActive(open);
             if (!open)
             {
-                CloseChest();
+                CloseStation();
                 if (!_cursor.IsEmpty)
                 {
-                    // Return whatever is on the cursor to the player.
+                    _player.Inventory.Add(_cursor.Item, _cursor.Count);
+                    _cursor = ItemStack.Empty;
+                }
+                _dragging = false;
+            }
+            else
+            {
+                _chestGrid.Root.SetActive(_openChest != null);
+                _furnaceGrid.Root.SetActive(_openFurnace != null);
+                RefreshAll();
+                UpdateGhost();
+            }
+        }
+
+        // -------------------------------------------------------- interactions
+
+        private Inventory GetInventory(PanelKind panel) => panel switch
+        {
+            PanelKind.Player => _player.Inventory,
+            PanelKind.Chest => _openChest != null ? _openChest.Inventory : null,
+            PanelKind.Furnace => _openFurnace != null ? _openFurnace.Inventory : null,
+            _ => null,
+        };
+
+        public void OnSlotClicked(PanelKind panel, int i, bool rightButton)
+        {
+            Inventory inv = GetInventory(panel);
+            if (inv == null || i >= inv.Size) return;
+            if (rightButton) RightClick(inv, i); else LeftClick(inv, i);
+            UpdateGhost();
+        }
+
+        public void OnSlotBeginDrag(PanelKind panel, int i)
+        {
+            Inventory inv = GetInventory(panel);
+            if (inv == null || i >= inv.Size) return;
+            if (!_cursor.IsEmpty) return; // already carrying via click — drag just moves it
+
+            ItemStack slot = inv.Get(i);
+            if (slot.IsEmpty) return;
+            _cursor = slot;
+            inv.SetSlot(i, ItemStack.Empty);
+            _dragging = true;
+            _dragSourcePanel = panel;
+            _dragSourceIndex = i;
+            UpdateGhost();
+        }
+
+        public void OnSlotDrop(PanelKind panel, int i)
+        {
+            Inventory inv = GetInventory(panel);
+            if (inv == null || i >= inv.Size || _cursor.IsEmpty) return;
+            LeftClick(inv, i); // place / merge / swap semantics
+            _dragging = false;
+            UpdateGhost();
+        }
+
+        public void OnSlotEndDrag()
+        {
+            // Released somewhere that wasn't a slot: send the stack home.
+            if (_dragging && !_cursor.IsEmpty)
+            {
+                Inventory src = GetInventory(_dragSourcePanel);
+                if (src != null) LeftClick(src, _dragSourceIndex);
+                if (!_cursor.IsEmpty) // source got occupied meanwhile — any pocket
+                {
                     _player.Inventory.Add(_cursor.Item, _cursor.Count);
                     _cursor = ItemStack.Empty;
                 }
             }
-            if (open) { RefreshAll(); UpdateGhost(); }
-        }
-
-        // ---------------------------------------------------------------- clicks
-
-        public void OnSlotClicked(bool chestGrid, int i, bool rightButton)
-        {
-            Inventory inv = chestGrid ? _chestGrid.Bound : _playerGrid.Bound;
-            if (inv == null || i >= inv.Size) return;
-            if (rightButton) RightClick(inv, i); else LeftClick(inv, i);
+            _dragging = false;
             UpdateGhost();
         }
 
@@ -226,7 +318,7 @@ namespace Doodgy.Gameplay
             }
         }
 
-        // ------------------------------------------------------------------ build
+        // -------------------------------------------------------------- build
 
         private static void EnsureEventSystem()
         {
@@ -248,69 +340,141 @@ namespace Doodgy.Gameplay
             canvasGo.AddComponent<GraphicRaycaster>();
         }
 
-        private GridPanel BuildGrid(string name, int slots, float anchorY)
+        private GridPanel BuildGrid(PanelKind kind, string title, int slots, int cols,
+                                    Vector2 anchoredPos, bool hotbarGapAfterRow0)
         {
             var panel = new GridPanel();
-            int rows = Mathf.CeilToInt(slots / (float)columns);
-            int pad = 10;
+            int rows = Mathf.CeilToInt(slots / (float)cols);
 
-            var root = new GameObject(name);
-            panel.Root = root;
-            var prt = root.AddComponent<RectTransform>();
-            prt.SetParent(_canvas.transform, false);
-            prt.anchorMin = prt.anchorMax = new Vector2(0.5f, 0.5f);
-            prt.pivot = new Vector2(0.5f, 0.5f);
-            float gridW = columns * slotSize + (columns - 1) * spacing;
-            float gridH = rows * slotSize + (rows - 1) * spacing;
-            prt.sizeDelta = new Vector2(gridW + pad * 2, gridH + pad * 2);
-            prt.anchoredPosition = new Vector2(0f, anchorY);
-            var bg = root.AddComponent<Image>();
-            bg.color = new Color(0f, 0f, 0f, 0.75f);
+            float gridW = cols * slotSize + (cols - 1) * spacing;
+            float gridH = rows * slotSize + (rows - 1) * spacing
+                          + (hotbarGapAfterRow0 && rows > 1 ? HotbarGap : 0);
 
-            bool isChest = name == "Chest";
+            RectTransform prt = MakePanelRoot(title, out panel.Root,
+                new Vector2(gridW + Pad * 2, gridH + Pad * 2 + HeaderH), anchoredPos);
+
             panel.Icons = new Image[slots];
             panel.Counts = new Text[slots];
 
             for (int i = 0; i < slots; i++)
             {
-                int col = i % columns;
-                int rowFromTop = i / columns;
-
-                var frame = new GameObject($"Slot{i}").AddComponent<Image>();
-                frame.sprite = slotFrame;
-                RectTransform fr = frame.rectTransform;
-                fr.SetParent(prt, false);
-                fr.anchorMin = fr.anchorMax = new Vector2(0f, 1f);
-                fr.pivot = new Vector2(0f, 1f);
-                fr.sizeDelta = new Vector2(slotSize, slotSize);
-                fr.anchoredPosition = new Vector2(
-                    pad + col * (slotSize + spacing),
-                    -(pad + rowFromTop * (slotSize + spacing)));
-
-                frame.gameObject.AddComponent<SlotView>().Init(this, isChest, i);
-
-                var icon = new GameObject("Icon").AddComponent<Image>();
-                icon.preserveAspect = true;
-                icon.raycastTarget = false;
-                RectTransform irt = icon.rectTransform;
-                irt.SetParent(fr, false);
-                irt.anchorMin = Vector2.zero; irt.anchorMax = Vector2.one;
-                irt.offsetMin = new Vector2(6, 6); irt.offsetMax = new Vector2(-6, -6);
-                panel.Icons[i] = icon;
-
-                var count = new GameObject("Count").AddComponent<Text>();
-                count.font = _font; count.fontSize = 18; count.alignment = TextAnchor.LowerRight;
-                count.color = Color.white; count.raycastTarget = false;
-                count.horizontalOverflow = HorizontalWrapMode.Overflow;
-                count.verticalOverflow = VerticalWrapMode.Overflow;
-                RectTransform crt = count.rectTransform;
-                crt.SetParent(fr, false);
-                crt.anchorMin = Vector2.zero; crt.anchorMax = Vector2.one;
-                crt.offsetMin = new Vector2(2, 2); crt.offsetMax = new Vector2(-4, -2);
-                panel.Counts[i] = count;
+                int col = i % cols;
+                int row = i / cols;
+                float extraGap = hotbarGapAfterRow0 && row > 0 ? HotbarGap : 0f;
+                var pos = new Vector2(
+                    Pad + col * (slotSize + spacing),
+                    -(Pad + HeaderH + row * (slotSize + spacing) + extraGap));
+                BuildSlot(prt, kind, i, pos, panel);
             }
 
             return panel;
+        }
+
+        private GridPanel BuildFurnacePanel(Vector2 anchoredPos)
+        {
+            var panel = new GridPanel();
+            // 3 labelled slots: In | Fuel | Out, plus a status line beneath.
+            int cols = 3;
+            float gridW = cols * slotSize + (cols - 1) * (spacing + 14);
+            float gridH = slotSize + 34; // captions above, status below
+
+            RectTransform prt = MakePanelRoot("Furnace", out panel.Root,
+                new Vector2(gridW + Pad * 2, gridH + Pad * 2 + HeaderH), anchoredPos);
+
+            panel.Icons = new Image[3];
+            panel.Counts = new Text[3];
+            string[] captions = { "In", "Fuel", "Out" };
+
+            for (int i = 0; i < 3; i++)
+            {
+                var pos = new Vector2(Pad + i * (slotSize + spacing + 14), -(Pad + HeaderH + 14));
+                BuildSlot(prt, PanelKind.Furnace, i, pos, panel);
+
+                Text cap = MakeText(prt, captions[i], 12, TextAnchor.MiddleCenter, HeaderColor);
+                RectTransform crt = cap.rectTransform;
+                crt.anchorMin = crt.anchorMax = new Vector2(0f, 1f);
+                crt.pivot = new Vector2(0f, 1f);
+                crt.sizeDelta = new Vector2(slotSize, 14);
+                crt.anchoredPosition = new Vector2(pos.x, -(Pad + HeaderH - 2));
+            }
+
+            _furnaceStatus = MakeText(prt, "", 13, TextAnchor.MiddleLeft, new Color(1f, 0.8f, 0.4f));
+            RectTransform srt = _furnaceStatus.rectTransform;
+            srt.anchorMin = new Vector2(0f, 0f);
+            srt.anchorMax = new Vector2(1f, 0f);
+            srt.pivot = new Vector2(0.5f, 0f);
+            srt.offsetMin = new Vector2(Pad, 6);
+            srt.offsetMax = new Vector2(-Pad, 24);
+
+            return panel;
+        }
+
+        private RectTransform MakePanelRoot(string title, out GameObject root,
+                                            Vector2 size, Vector2 anchoredPos)
+        {
+            root = new GameObject(title + "Panel");
+            var prt = root.AddComponent<RectTransform>();
+            prt.SetParent(_canvas.transform, false);
+            prt.anchorMin = prt.anchorMax = new Vector2(0.5f, 0.5f);
+            prt.pivot = new Vector2(0.5f, 0.5f);
+            prt.sizeDelta = size;
+            prt.anchoredPosition = anchoredPos;
+            root.AddComponent<Image>().color = PanelColor;
+
+            Text header = MakeText(prt, title.ToUpperInvariant(), 13, TextAnchor.MiddleLeft, HeaderColor);
+            RectTransform hrt = header.rectTransform;
+            hrt.anchorMin = new Vector2(0f, 1f);
+            hrt.anchorMax = new Vector2(1f, 1f);
+            hrt.pivot = new Vector2(0.5f, 1f);
+            hrt.offsetMin = new Vector2(Pad, -HeaderH - 4);
+            hrt.offsetMax = new Vector2(-Pad, -4);
+            return prt;
+        }
+
+        private void BuildSlot(RectTransform parent, PanelKind kind, int index,
+                               Vector2 anchoredPos, GridPanel panel)
+        {
+            var frame = new GameObject($"Slot{index}").AddComponent<Image>();
+            frame.sprite = slotFrame;
+            RectTransform fr = frame.rectTransform;
+            fr.SetParent(parent, false);
+            fr.anchorMin = fr.anchorMax = new Vector2(0f, 1f);
+            fr.pivot = new Vector2(0f, 1f);
+            fr.sizeDelta = new Vector2(slotSize, slotSize);
+            fr.anchoredPosition = anchoredPos;
+
+            frame.gameObject.AddComponent<SlotView>().Init(this, kind, index);
+
+            var icon = new GameObject("Icon").AddComponent<Image>();
+            icon.preserveAspect = true;
+            icon.raycastTarget = false;
+            RectTransform irt = icon.rectTransform;
+            irt.SetParent(fr, false);
+            irt.anchorMin = Vector2.zero; irt.anchorMax = Vector2.one;
+            irt.offsetMin = new Vector2(6, 6); irt.offsetMax = new Vector2(-6, -6);
+            panel.Icons[index] = icon;
+
+            Text count = MakeText(fr, "", 16, TextAnchor.LowerRight, Color.white);
+            RectTransform crt = count.rectTransform;
+            crt.anchorMin = Vector2.zero; crt.anchorMax = Vector2.one;
+            crt.offsetMin = new Vector2(2, 2); crt.offsetMax = new Vector2(-4, -2);
+            panel.Counts[index] = count;
+        }
+
+        private Text MakeText(RectTransform parent, string value, int size,
+                              TextAnchor anchor, Color color)
+        {
+            var t = new GameObject("Text").AddComponent<Text>();
+            t.font = _font;
+            t.fontSize = size;
+            t.alignment = anchor;
+            t.color = color;
+            t.raycastTarget = false;
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.verticalOverflow = VerticalWrapMode.Overflow;
+            t.text = value;
+            t.rectTransform.SetParent(parent, false);
+            return t;
         }
 
         private void BuildGhost()
@@ -328,14 +492,8 @@ namespace Doodgy.Gameplay
             gir.anchorMin = Vector2.zero; gir.anchorMax = Vector2.one;
             gir.offsetMin = new Vector2(6, 6); gir.offsetMax = new Vector2(-6, -6);
 
-            _ghostCount = new GameObject("GhostCount").AddComponent<Text>();
-            _ghostCount.font = _font; _ghostCount.fontSize = 18;
-            _ghostCount.alignment = TextAnchor.LowerRight;
-            _ghostCount.color = Color.white; _ghostCount.raycastTarget = false;
-            _ghostCount.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _ghostCount.verticalOverflow = VerticalWrapMode.Overflow;
+            _ghostCount = MakeText(_ghost, "", 16, TextAnchor.LowerRight, Color.white);
             RectTransform gcr = _ghostCount.rectTransform;
-            gcr.SetParent(_ghost, false);
             gcr.anchorMin = Vector2.zero; gcr.anchorMax = Vector2.one;
         }
 
@@ -343,6 +501,7 @@ namespace Doodgy.Gameplay
         {
             _playerGrid?.Refresh();
             _chestGrid?.Refresh();
+            _furnaceGrid?.Refresh();
         }
 
         private void UpdateGhost()
@@ -356,23 +515,55 @@ namespace Doodgy.Gameplay
             }
             else _ghostCount.text = "";
         }
+
+        private void UpdateFurnaceStatus()
+        {
+            if (_furnaceStatus == null || _openFurnace == null) return;
+            if (_openFurnace.IsBurning)
+            {
+                int pct = Mathf.RoundToInt(_openFurnace.SmeltProgress01 * 100f);
+                _furnaceStatus.text = pct > 0
+                    ? $"Burning — smelting {pct}%"
+                    : $"Burning ({Mathf.CeilToInt(_openFurnace.BurnRemaining)}s fuel left)";
+            }
+            else
+            {
+                _furnaceStatus.text = "Cold — add fuel (wood or coal) and something to smelt";
+            }
+        }
     }
 
-    /// <summary>Per-slot click forwarder for <see cref="InventoryUI"/>.</summary>
-    public sealed class SlotView : MonoBehaviour, IPointerClickHandler
+    /// <summary>Per-slot pointer handler: forwards clicks and drag & drop to <see cref="InventoryUI"/>.</summary>
+    public sealed class SlotView : MonoBehaviour, IPointerClickHandler,
+        IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
     {
         private InventoryUI _owner;
-        private bool _chestGrid;
+        private InventoryUI.PanelKind _panel;
         private int _index;
 
-        public void Init(InventoryUI owner, bool chestGrid, int index)
+        public void Init(InventoryUI owner, InventoryUI.PanelKind panel, int index)
         {
             _owner = owner;
-            _chestGrid = chestGrid;
+            _panel = panel;
             _index = index;
         }
 
         public void OnPointerClick(PointerEventData e)
-            => _owner.OnSlotClicked(_chestGrid, _index, e.button == PointerEventData.InputButton.Right);
+        {
+            if (e.dragging) return; // drags handle themselves
+            _owner.OnSlotClicked(_panel, _index, e.button == PointerEventData.InputButton.Right);
+        }
+
+        public void OnBeginDrag(PointerEventData e)
+        {
+            if (e.button == PointerEventData.InputButton.Left)
+                _owner.OnSlotBeginDrag(_panel, _index);
+        }
+
+        public void OnDrag(PointerEventData e) { } // required for drag events to fire
+
+        public void OnDrop(PointerEventData e) => _owner.OnSlotDrop(_panel, _index);
+
+        public void OnEndDrag(PointerEventData e) => _owner.OnSlotEndDrag();
     }
 }

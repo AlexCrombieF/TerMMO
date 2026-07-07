@@ -121,6 +121,17 @@ namespace Doodgy.Gameplay
                 return true;
             }
 
+            FurnaceObject furnace = col.GetComponent<FurnaceObject>();
+            if (furnace != null)
+            {
+                if (InReach(tile))
+                {
+                    var ui = GetComponent<InventoryUI>();
+                    if (ui != null) ui.ToggleFurnace(furnace);
+                }
+                return true;
+            }
+
             return false;
         }
 
@@ -133,11 +144,11 @@ namespace Doodgy.Gameplay
             if (po == null) return false;
             if (!InReach(tile)) return true; // clicked but out of reach — consume the click
 
-            // A chest must be emptied before it can be picked up (no item loss).
-            ChestObject chest = po.GetComponent<ChestObject>();
-            if (chest != null && !chest.Inventory.IsEmpty())
+            // Storage objects (chest, furnace) must be emptied before pickup — no item loss.
+            var holder = po.GetComponent<IHasInventory>();
+            if (holder != null && !holder.Inventory.IsEmpty())
             {
-                Debug.Log("[World] Empty the chest before picking it up.");
+                Debug.Log($"[World] Empty the {po.Kind} before picking it up.");
                 return true;
             }
 

@@ -25,6 +25,9 @@ MonoBehaviour:
   miningPower: 1
   reach: 4
   objectSprite: {fileID: 4795455929860361961, guid: 0a6b2093e3b7759468cfda6b01ee0994, type: 3}
-  objectSize: {x: 1, y: 3}
+  objectSize: {x: 1, y: 2}
   objectKind: Door
   objectAltSprite: {fileID: -3451410940433344085, guid: 5dd973c3bc42ea546b11610def0e1e44, type: 3}
+  fuelSeconds: 0
+  smeltsInto: {fileID: 0}
+  smeltSeconds: 4
