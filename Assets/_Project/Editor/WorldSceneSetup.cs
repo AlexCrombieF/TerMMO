@@ -60,6 +60,12 @@ namespace Doodgy.EditorTools
 
             worldGo.AddComponent<LightingSystem>(); // tile-based darkness/skylight
 
+            var walls = worldGo.AddComponent<BackgroundWalls>();
+            var wallsSo = new SerializedObject(walls);
+            wallsSo.FindProperty("world").objectReferenceValue = world;
+            wallsSo.FindProperty("wallSprite").objectReferenceValue = EditorSpriteUtil.LoadSprite(Tiles + "CaveWall.aseprite");
+            wallsSo.ApplyModifiedPropertiesWithoutUndo();
+
             var trees = worldGo.AddComponent<TreeSpawner>();
             var treeSo = new SerializedObject(trees);
             treeSo.FindProperty("world").objectReferenceValue = world;
@@ -114,6 +120,26 @@ namespace Doodgy.EditorTools
             cam.orthographicSize = 12f;
             cam.transform.SetParent(playerGo.transform);
             cam.transform.localPosition = new Vector3(0f, 0f, -10f);
+
+            // Pixel Perfect Camera: snaps rendering to the 16px grid, which kills
+            // the hairline seams between chunk tilemap meshes (and sharpens art).
+            // Added via reflection so this editor assembly needs no URP reference.
+            var ppcType = System.Type.GetType(
+                "UnityEngine.Rendering.Universal.PixelPerfectCamera, Unity.RenderPipelines.Universal.Runtime");
+            if (ppcType != null)
+            {
+                Component ppc = cam.GetComponent(ppcType);
+                if (ppc == null) ppc = cam.gameObject.AddComponent(ppcType);
+                var ppcSo = new SerializedObject(ppc);
+                ppcSo.FindProperty("m_AssetsPPU").intValue = 16;
+                ppcSo.FindProperty("m_RefResolutionX").intValue = 640;
+                ppcSo.FindProperty("m_RefResolutionY").intValue = 360;
+                ppcSo.ApplyModifiedPropertiesWithoutUndo();
+            }
+            else
+            {
+                Debug.LogWarning("[Doodgy] URP PixelPerfectCamera type not found — chunk seams may show.");
+            }
 
             // --- Wiring ------------------------------------------------------
             var editSo = new SerializedObject(edit);
@@ -174,6 +200,12 @@ namespace Doodgy.EditorTools
             lookSo.FindProperty("clothesSprite").objectReferenceValue = EditorSpriteUtil.LoadSprite(PlayerArt + "PlayerClothes.aseprite");
             lookSo.FindProperty("eyesBaseSprite").objectReferenceValue = EditorSpriteUtil.LoadSprite(PlayerArt + "PlayerEyesBase.aseprite");
             lookSo.FindProperty("eyesSprite").objectReferenceValue = EditorSpriteUtil.LoadSprite(PlayerArt + "PlayerEyes.aseprite");
+            Sprite[] walkFrames = EditorSpriteUtil.LoadAllSprites(PlayerArt + "PlayerWalk.aseprite");
+            SerializedProperty walkArr = lookSo.FindProperty("walkFrames");
+            walkArr.arraySize = walkFrames.Length;
+            for (int i = 0; i < walkFrames.Length; i++)
+                walkArr.GetArrayElementAtIndex(i).objectReferenceValue = walkFrames[i];
+
             string[] hairGuids = AssetDatabase.FindAssets("Hair t:Sprite", new[] { "Assets/_Project/Content/Player" });
             SerializedProperty hairArr = lookSo.FindProperty("hairStyles");
             hairArr.arraySize = hairGuids.Length;

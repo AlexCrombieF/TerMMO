@@ -42,6 +42,12 @@ namespace Doodgy.Data
                  "placeholder tile when no TileAsset/Sprite is assigned.")]
         [SerializeField] private Color tint = Color.white;
 
+        [Header("Edge variants (optional — e.g. grass)")]
+        [Tooltip("Used when the tile to the LEFT is air (random pick per position).")]
+        [SerializeField] private Sprite[] edgeLeftSprites;
+        [Tooltip("Used when the tile to the RIGHT is air (random pick per position).")]
+        [SerializeField] private Sprite[] edgeRightSprites;
+
         [Header("Animation (optional)")]
         [Tooltip("2+ frames make the tile animate (e.g. torch flame). Overrides " +
                  "Sprite when set. Wired by Build Content from the Aseprite frames.")]
@@ -92,6 +98,11 @@ namespace Doodgy.Data
         public Color Tint => tint;
         public Sprite[] AnimationSprites => animationSprites;
         public float AnimationFps => animationFps;
+        public Sprite[] EdgeLeftSprites => edgeLeftSprites;
+        public Sprite[] EdgeRightSprites => edgeRightSprites;
+        public bool HasEdgeSprites =>
+            (edgeLeftSprites != null && edgeLeftSprites.Length > 0)
+            || (edgeRightSprites != null && edgeRightSprites.Length > 0);
         public bool IsSolid => isSolid;
         public float Hardness => hardness;
         public ToolType RequiredTool => requiredTool;

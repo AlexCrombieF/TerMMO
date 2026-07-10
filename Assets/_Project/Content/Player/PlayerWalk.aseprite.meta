@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 5dd973c3bc42ea546b11610def0e1e44
+guid: e918f267fd4d7e140af83b03cb578c02
 ScriptedImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -123,7 +123,49 @@ ScriptedImporter:
     tessellationDetail: 0
     uvTransform: {x: 0, y: 0}
   animatedSpriteImportData:
-  - name: DoorOpen
+  - name: Frame_0
+    originalName: 
+    pivot: {x: 0.5, y: 0}
+    alignment: 9
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 4
+      y: 41
+      width: 14
+      height: 29
+    spriteID: 055f6da3df2de4846a1aca234af9b5f3
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 4, y: 41}
+  - name: Frame_1
+    originalName: 
+    pivot: {x: 0.53846157, y: 0}
+    alignment: 9
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 4
+      y: 78
+      width: 13
+      height: 29
+    spriteID: 800e3aa12c90ec347b0fc4c4b1ffa86f
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 4, y: 78}
+  - name: Frame_2
     originalName: 
     pivot: {x: 0.5, y: 0}
     alignment: 9
@@ -134,8 +176,8 @@ ScriptedImporter:
       x: 4
       y: 4
       width: 16
-      height: 32
-    spriteID: 6f62cc97343e5834ea0f8a782bd0528b
+      height: 29
+    spriteID: bc763c00c91cb594999e35698924b329
     spriteBone: []
     spriteOutline: []
     vertices: []
@@ -144,29 +186,77 @@ ScriptedImporter:
     edges: []
     tessellationDetail: 0
     uvTransform: {x: 4, y: 4}
+  - name: Frame_3
+    originalName: 
+    pivot: {x: 0.53846157, y: 0}
+    alignment: 9
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 28
+      y: 4
+      width: 13
+      height: 29
+    spriteID: 1ecc8ab3b904bf64f953a64d9b13f8ac
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 28, y: 4}
   spriteSheetImportData: []
   asepriteLayers:
   - layerIndex: 0
     uuid:
-      value0: 4043805218
+      value0: 883294770
       value1: 0
       value2: 0
       value3: 0
     guid: 0
-    name: DoorOpen
+    name: PlayerWalk
     layerFlags: 0
     layerType: 0
     blendMode: 0
     cells:
-    - name: DoorOpen
+    - name: Frame_0
       frameIndex: 0
+      additiveSortOrder: 0
+      cellRect:
+        x: 1
+        y: 0
+        width: 14
+        height: 29
+      spriteId: 055f6da3df2de4846a1aca234af9b5f3
+    - name: Frame_1
+      frameIndex: 1
+      additiveSortOrder: 0
+      cellRect:
+        x: 1
+        y: 0
+        width: 13
+        height: 29
+      spriteId: 800e3aa12c90ec347b0fc4c4b1ffa86f
+    - name: Frame_2
+      frameIndex: 2
       additiveSortOrder: 0
       cellRect:
         x: 0
         y: 0
         width: 16
-        height: 32
-      spriteId: 6f62cc97343e5834ea0f8a782bd0528b
+        height: 29
+      spriteId: bc763c00c91cb594999e35698924b329
+    - name: Frame_3
+      frameIndex: 3
+      additiveSortOrder: 0
+      cellRect:
+        x: 1
+        y: 0
+        width: 13
+        height: 29
+      spriteId: 1ecc8ab3b904bf64f953a64d9b13f8ac
     linkedCells: []
     parentIndex: -1
   platformSettings:
@@ -186,4 +276,4 @@ ScriptedImporter:
   secondarySpriteTextures: []
   spritePackingTag: 
   canvasSize: {x: 16, y: 32}
-  previousTextureSize: {x: 32, y: 64}
+  previousTextureSize: {x: 64, y: 128}

@@ -273,6 +273,12 @@ namespace Doodgy.Gameplay
                     if (!world.IsLoaded(t) || world.GetTile(t) != WorldConstants.AirTileId) return; // needs clear space
                 }
 
+            // Furniture needs solid ground under its whole footprint — no
+            // floating doors/chests.
+            for (int dx = 0; dx < w; dx++)
+                if (world.GetTile(new Vector2Int(tile.x + dx, tile.y - 1)) == WorldConstants.AirTileId)
+                    return;
+
             PlacedObject.Spawn(item, tile);
             inventory.ConsumeSelected(1);
         }

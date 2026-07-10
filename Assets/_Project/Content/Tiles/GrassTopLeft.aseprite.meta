@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 5dd973c3bc42ea546b11610def0e1e44
+guid: bf3d9d316d8b1e3498272edc713557cc
 ScriptedImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -123,7 +123,7 @@ ScriptedImporter:
     tessellationDetail: 0
     uvTransform: {x: 0, y: 0}
   animatedSpriteImportData:
-  - name: DoorOpen
+  - name: GrassTopLeft
     originalName: 
     pivot: {x: 0.5, y: 0}
     alignment: 9
@@ -134,8 +134,8 @@ ScriptedImporter:
       x: 4
       y: 4
       width: 16
-      height: 32
-    spriteID: 6f62cc97343e5834ea0f8a782bd0528b
+      height: 16
+    spriteID: 114d987be742d4349813d8b8fb83516b
     spriteBone: []
     spriteOutline: []
     vertices: []
@@ -148,25 +148,25 @@ ScriptedImporter:
   asepriteLayers:
   - layerIndex: 0
     uuid:
-      value0: 4043805218
+      value0: 485459914
       value1: 0
       value2: 0
       value3: 0
     guid: 0
-    name: DoorOpen
+    name: GrassTopLeft
     layerFlags: 0
     layerType: 0
     blendMode: 0
     cells:
-    - name: DoorOpen
+    - name: GrassTopLeft
       frameIndex: 0
       additiveSortOrder: 0
       cellRect:
         x: 0
         y: 0
         width: 16
-        height: 32
-      spriteId: 6f62cc97343e5834ea0f8a782bd0528b
+        height: 16
+      spriteId: 114d987be742d4349813d8b8fb83516b
     linkedCells: []
     parentIndex: -1
   platformSettings:
@@ -185,5 +185,5 @@ ScriptedImporter:
   generatePhysicsShape: 0
   secondarySpriteTextures: []
   spritePackingTag: 
-  canvasSize: {x: 16, y: 32}
-  previousTextureSize: {x: 32, y: 64}
+  canvasSize: {x: 16, y: 16}
+  previousTextureSize: {x: 32, y: 32}

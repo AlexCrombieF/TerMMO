@@ -26,6 +26,10 @@ namespace Doodgy.Gameplay
         [Tooltip("One sprite per hairstyle, same canvas as the body.")]
         [SerializeField] private Sprite[] hairStyles;
 
+        [Header("Animation (body layer only; same canvas/pose as the idle body)")]
+        [SerializeField] private Sprite[] walkFrames;
+        [SerializeField] private float walkFps = 8f;
+
         private PlayerController _controller;
         private SpriteRenderer _fallback;   // the controller's placeholder box
         private Transform _visual;
@@ -45,9 +49,12 @@ namespace Doodgy.Gameplay
                ? null
                : hairStyles[Mathf.Clamp(index, 0, hairStyles.Length - 1)];
 
+        private Rigidbody2D _rb;
+
         private void Start()
         {
             _controller = GetComponent<PlayerController>();
+            _rb = GetComponent<Rigidbody2D>();
             _fallback = GetComponent<SpriteRenderer>();
             Apply(Current);
         }
@@ -148,6 +155,27 @@ namespace Doodgy.Gameplay
             float x = _controller.Facing < 0 ? -_scale : _scale;
             if (!Mathf.Approximately(_visual.localScale.x, x))
                 _visual.localScale = new Vector3(x, _scale, 1f);
+
+            AnimateBody();
+        }
+
+        // Walk cycle on the body layer while moving on the ground; the frames
+        // share the idle canvas/pivot, so they stay aligned with the other layers.
+        private void AnimateBody()
+        {
+            if (_body == null || walkFrames == null || walkFrames.Length == 0) return;
+
+            bool moving = _rb != null && Mathf.Abs(_rb.linearVelocity.x) > 0.15f
+                          && _controller.IsGrounded;
+            if (moving)
+            {
+                int idx = (int)(Time.time * walkFps) % walkFrames.Length;
+                _body.sprite = walkFrames[idx];
+            }
+            else
+            {
+                _body.sprite = bodySprite; // idle pose
+            }
         }
     }
 }

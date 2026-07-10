@@ -17,6 +17,8 @@ MonoBehaviour:
   tileAsset: {fileID: 0}
   sprite: {fileID: 4524294956735625351, guid: 54a4ccbb3199d3247bfc53ef78e3f828, type: 3}
   tint: {r: 1, g: 1, b: 1, a: 1}
+  edgeLeftSprites: []
+  edgeRightSprites: []
   animationSprites: []
   animationFps: 8
   isSolid: 1

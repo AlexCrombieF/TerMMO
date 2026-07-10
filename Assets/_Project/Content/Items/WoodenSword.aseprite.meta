@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 5dd973c3bc42ea546b11610def0e1e44
+guid: 251fcbbd0bc3a7e40a19218a0b4bd19c
 ScriptedImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -123,9 +123,9 @@ ScriptedImporter:
     tessellationDetail: 0
     uvTransform: {x: 0, y: 0}
   animatedSpriteImportData:
-  - name: DoorOpen
+  - name: WoodenSword
     originalName: 
-    pivot: {x: 0.5, y: 0}
+    pivot: {x: 0.4736842, y: -0.15789473}
     alignment: 9
     border: {x: 0, y: 0, z: 0, w: 0}
     customData: 
@@ -133,9 +133,9 @@ ScriptedImporter:
       serializedVersion: 2
       x: 4
       y: 4
-      width: 16
-      height: 32
-    spriteID: 6f62cc97343e5834ea0f8a782bd0528b
+      width: 19
+      height: 19
+    spriteID: 9209d6c6608d63e4ba1f5ba79b0f1630
     spriteBone: []
     spriteOutline: []
     vertices: []
@@ -148,25 +148,25 @@ ScriptedImporter:
   asepriteLayers:
   - layerIndex: 0
     uuid:
-      value0: 4043805218
+      value0: 3861229433
       value1: 0
       value2: 0
       value3: 0
     guid: 0
-    name: DoorOpen
+    name: WoodenSword
     layerFlags: 0
     layerType: 0
     blendMode: 0
     cells:
-    - name: DoorOpen
+    - name: WoodenSword
       frameIndex: 0
       additiveSortOrder: 0
       cellRect:
-        x: 0
-        y: 0
-        width: 16
-        height: 32
-      spriteId: 6f62cc97343e5834ea0f8a782bd0528b
+        x: 3
+        y: 3
+        width: 19
+        height: 19
+      spriteId: 9209d6c6608d63e4ba1f5ba79b0f1630
     linkedCells: []
     parentIndex: -1
   platformSettings:
@@ -185,5 +185,5 @@ ScriptedImporter:
   generatePhysicsShape: 0
   secondarySpriteTextures: []
   spritePackingTag: 
-  canvasSize: {x: 16, y: 32}
-  previousTextureSize: {x: 32, y: 64}
+  canvasSize: {x: 24, y: 24}
+  previousTextureSize: {x: 32, y: 32}

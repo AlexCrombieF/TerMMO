@@ -13,6 +13,7 @@ namespace Doodgy.Gameplay
         private const float OpenAlpha = 0.35f;
 
         private BoxCollider2D _solid;
+        private PlacedObject _po;
         private SpriteRenderer _sprite;
         private Sprite _closedArt;
         private Sprite _openArt;   // from ItemData.ObjectAltSprite; null = fade instead
@@ -30,10 +31,12 @@ namespace Doodgy.Gameplay
             _solid.isTrigger = false;
 
             _sprite = GetComponentInChildren<SpriteRenderer>();
-            if (_sprite != null) _closedArt = _sprite.sprite;
-
-            var po = GetComponent<PlacedObject>();
-            if (po != null && po.Source != null) _openArt = po.Source.ObjectAltSprite;
+            _po = GetComponent<PlacedObject>();
+            if (_po != null && _po.Source != null)
+            {
+                _closedArt = _po.Source.ObjectSprite;
+                _openArt = _po.Source.ObjectAltSprite;
+            }
         }
 
         public void Toggle() => SetOpen(!_open);
@@ -42,14 +45,14 @@ namespace Doodgy.Gameplay
         {
             _open = open;
             _solid.enabled = !open;
-            if (_sprite == null) return;
 
-            if (_openArt != null)
+            if (_openArt != null && _po != null)
             {
-                // Real open/closed art.
-                _sprite.sprite = open ? _openArt : _closedArt;
+                // Real open/closed art — re-laid-out per sprite, because the two
+                // may be trimmed differently by the importer.
+                _po.SetSprite(open ? _openArt : _closedArt);
             }
-            else
+            else if (_sprite != null)
             {
                 // No open sprite yet — fade to signal pass-through.
                 Color c = _sprite.color;

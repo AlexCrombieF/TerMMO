@@ -112,8 +112,26 @@ namespace Doodgy.Gameplay
             if (!chunk.SetLocal(local.x, local.y, id)) return false; // unchanged
 
             _renderers[cc].SetTile(tile, id, tileDatabase, _resolver);
+
+            // Neighbours may be edge-aware (grass) — re-resolve them so their
+            // sprite reflects the new neighbourhood. Diagonal-up included: a
+            // grass edge depends on the tile beside it AND the one below that.
+            RefreshTileVisual(new Vector2Int(tile.x - 1, tile.y));
+            RefreshTileVisual(new Vector2Int(tile.x + 1, tile.y));
+            RefreshTileVisual(new Vector2Int(tile.x - 1, tile.y + 1));
+            RefreshTileVisual(new Vector2Int(tile.x + 1, tile.y + 1));
+
             OnTileChanged?.Invoke(new TileChangedEvent(tile, prev, id));
             return true;
+        }
+
+        /// <summary>Redraws a single cell from its current data (no data change, no events).</summary>
+        private void RefreshTileVisual(Vector2Int tile)
+        {
+            Vector2Int cc = WorldCoords.TileToChunk(tile);
+            if (!_chunks.TryGetValue(cc, out Chunk chunk)) return;
+            Vector2Int local = WorldCoords.TileToLocal(tile);
+            _renderers[cc].SetTile(tile, chunk.GetLocal(local.x, local.y), tileDatabase, _resolver);
         }
 
         // --------------------------------------------------------------- chunks
@@ -153,6 +171,7 @@ namespace Doodgy.Gameplay
         [ContextMenu("Regenerate World")]
         public void GenerateWorld()
         {
+            EdgeAwareTile.WorldRef = this; // edge tiles query neighbours through us
             ClearWorld();
 
             if (randomizeSeed) seed = new System.Random().Next(int.MinValue, int.MaxValue);

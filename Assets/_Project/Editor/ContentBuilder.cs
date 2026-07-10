@@ -44,6 +44,7 @@ namespace Doodgy.EditorTools
             Sprite chestSpr = EditorSpriteUtil.LoadSprite(Tiles + "Chest.aseprite") ?? benchSpr;
             Sprite furnaceSpr = EditorSpriteUtil.LoadSprite(Tiles + "Furnace.aseprite") ?? stoneSpr;
             Sprite ingotSpr = EditorSpriteUtil.LoadSprite(Items + "IronIngot.aseprite") ?? rawIronSpr;
+            Sprite woodSwordSpr = EditorSpriteUtil.LoadSprite(Items + "WoodenSword.aseprite");
 
             // --- existing tiles (only refresh drops) ---
             TileData dirtTile = Load<TileData>(Tiles + "Tile_Dirt.asset");
@@ -74,6 +75,7 @@ namespace Doodgy.EditorTools
             ItemData itChest = LoadOrCreate<ItemData>(Items + "Item_Chest.asset");
             ItemData itIngot = LoadOrCreate<ItemData>(Items + "Item_IronIngot.asset");
             ItemData itFurnace = LoadOrCreate<ItemData>(Items + "Item_Furnace.asset");
+            ItemData itWoodSword = LoadOrCreate<ItemData>(Items + "Item_WoodenSword.asset");
 
             // --- configure items ---
             Item(itDirt,  10, "Dirt",        dirtSpr,   ItemCategory.TileBlock, 100, dirtTile);
@@ -95,6 +97,9 @@ namespace Doodgy.EditorTools
             Item(itIngot, 25, "Iron Ingot",  ingotSpr,  ItemCategory.Material,  100, null);
             Item(itFurnace, 26, "Furnace",   furnaceSpr, ItemCategory.TileBlock, 100, null);
             SetObject(itFurnace, furnaceSpr, 2, 2, "Furnace"); // 2x2 smelting station
+            // Weapon archetype: damage stats arrive with the combat system; the
+            // item exists now so it's craftable and takes a hotbar slot.
+            Item(itWoodSword, 27, "Wooden Sword", woodSwordSpr, ItemCategory.Weapon, 1, null);
             Tool(itPick,      20, "Wooden Pickaxe", pickSpr,      ToolType.Pickaxe, 1, 2.2f, 5f);
             Tool(itAxe,       21, "Wooden Axe",     axeSpr,       ToolType.Axe,     1, 3f,   5f);
             Tool(itStonePick, 22, "Stone Pickaxe",  stonePickSpr, ToolType.Pickaxe, 2, 5f,   5f);
@@ -140,6 +145,8 @@ namespace Doodgy.EditorTools
             AssetDatabase.DeleteAsset(Recipes + "Recipe_IronIngot.asset");
             SetRecipe(LoadOrCreate<Recipe>(Recipes + "Recipe_Chest.asset"),
                 itChest, 1, "Workbench", (itIngot, 2), (itWood, 10));
+            SetRecipe(LoadOrCreate<Recipe>(Recipes + "Recipe_WoodenSword.asset"),
+                itWoodSword, 1, "", (itWood, 8));
 
             // --- furnace data: what burns and what smelts ---
             SetFuel(itWood, 4f);
@@ -148,6 +155,16 @@ namespace Doodgy.EditorTools
 
             // --- torch animation from its Aseprite frames ---
             SetTileAnimation(torchTile, EditorSpriteUtil.LoadAllSprites(Tiles + "Torch.aseprite"), 8f);
+
+            // --- grass edge variants (left edge + right-edge variety pool) ---
+            SetEdges(grassTile,
+                new[] { EditorSpriteUtil.LoadSprite(Tiles + "GrassTopLeft.aseprite") },
+                new[]
+                {
+                    EditorSpriteUtil.LoadSprite(Tiles + "GrassTopRight.aseprite"),
+                    EditorSpriteUtil.LoadSprite(Tiles + "GrassTopRight2.aseprite"),
+                    EditorSpriteUtil.LoadSprite(Tiles + "GrassTopRight3.aseprite"),
+                });
 
             RegisterAllTiles();
             RegisterAllItems();
@@ -246,6 +263,21 @@ namespace Doodgy.EditorTools
             so.FindProperty("smeltSeconds").floatValue = seconds;
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(item);
+        }
+
+        private static void SetEdges(TileData tile, Sprite[] left, Sprite[] right)
+        {
+            var so = new SerializedObject(tile);
+            SerializedProperty l = so.FindProperty("edgeLeftSprites");
+            l.arraySize = left.Length;
+            for (int i = 0; i < left.Length; i++)
+                l.GetArrayElementAtIndex(i).objectReferenceValue = left[i];
+            SerializedProperty r = so.FindProperty("edgeRightSprites");
+            r.arraySize = right.Length;
+            for (int i = 0; i < right.Length; i++)
+                r.GetArrayElementAtIndex(i).objectReferenceValue = right[i];
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(tile);
         }
 
         private static void SetTileAnimation(TileData tile, Sprite[] frames, float fps)

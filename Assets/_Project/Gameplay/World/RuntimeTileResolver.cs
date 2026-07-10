@@ -32,6 +32,8 @@ namespace Doodgy.Gameplay
             if (data.TileAsset != null) result = data.TileAsset;          // authored Tile/RuleTile
             else if (data.AnimationSprites != null && data.AnimationSprites.Length > 1)
                 result = CreateAnimatedTile(data);                         // frame loop (torch)
+            else if (data.HasEdgeSprites && data.Sprite != null)
+                result = CreateEdgeTile(data);                             // neighbour-aware (grass)
             else if (data.Sprite != null) result = CreateSpriteTile(data); // raw sprite -> runtime tile
             else result = CreatePlaceholder(data);                         // colour fallback
 
@@ -64,24 +66,51 @@ namespace Doodgy.Gameplay
             return tile;
         }
 
+        /// <summary>Builds a neighbour-aware tile (grass edges over cliffs).</summary>
+        private static EdgeAwareTile CreateEdgeTile(TileData data)
+        {
+            var tile = ScriptableObject.CreateInstance<EdgeAwareTile>();
+            tile.Normal = Normalize(data.Sprite, data.DisplayName + "_tile");
+            tile.LeftEdges = NormalizeAll(data.EdgeLeftSprites, data.DisplayName + "_L");
+            tile.RightEdges = NormalizeAll(data.EdgeRightSprites, data.DisplayName + "_R");
+            tile.Color = data.Tint;
+            tile.ColliderType = data.IsSolid ? Tile.ColliderType.Grid : Tile.ColliderType.None;
+            return tile;
+        }
+
+        private static Sprite[] NormalizeAll(Sprite[] src, string prefix)
+        {
+            if (src == null) return System.Array.Empty<Sprite>();
+            var result = new Sprite[src.Length];
+            for (int i = 0; i < src.Length; i++)
+                if (src[i] != null) result[i] = Normalize(src[i], $"{prefix}{i}");
+            return result;
+        }
+
         /// <summary>Drops cached tiles so reassigned sprites are picked up on the next render.</summary>
         public void Clear() => _cache.Clear();
 
         /// <summary>
+        /// Rebuilds a sprite centred with PPU == its longest side, so it sits
+        /// centred in the cell and its longest edge spans exactly one tile.
+        /// </summary>
+        private static Sprite Normalize(Sprite src, string name)
+        {
+            Rect r = src.rect; // sub-rect within the (possibly atlas) texture, in pixels
+            float ppu = Mathf.Max(r.width, r.height);
+            var normalized = Sprite.Create(
+                src.texture, r, new Vector2(0.5f, 0.5f), ppu, 0, SpriteMeshType.FullRect);
+            normalized.name = name;
+            return normalized;
+        }
+
+        /// <summary>
         /// Wraps a raw sprite in a runtime Tile. The source sprite may be any size
-        /// with any pivot/PPU (e.g. an auto-sliced atlas sub-sprite); we rebuild it
-        /// centred, with PPU == its longest side, so it sits centred in the cell and
-        /// its longest edge spans exactly one tile (aspect preserved, no distortion).
+        /// with any pivot/PPU (e.g. an auto-sliced atlas sub-sprite).
         /// </summary>
         private static Tile CreateSpriteTile(TileData data)
         {
-            Sprite src = data.Sprite;
-            Rect r = src.rect; // sub-rect within the (possibly atlas) texture, in pixels
-            float ppu = Mathf.Max(r.width, r.height);
-
-            var normalized = Sprite.Create(
-                src.texture, r, new Vector2(0.5f, 0.5f), ppu, 0, SpriteMeshType.FullRect);
-            normalized.name = data.DisplayName + "_tile";
+            Sprite normalized = Normalize(data.Sprite, data.DisplayName + "_tile");
 
             var tile = ScriptableObject.CreateInstance<Tile>();
             tile.sprite = normalized;

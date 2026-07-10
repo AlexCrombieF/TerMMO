@@ -37,33 +37,50 @@ namespace Doodgy.Gameplay
             return false;
         }
 
+        private const float PixelsPerTile = 16f;
+
+        private SpriteRenderer _sr;
+        private int _w, _h;
+
+        /// <summary>
+        /// Shows a sprite pixel-true (16 px = 1 tile), bottom-centred on the
+        /// footprint, pivot/trim-agnostic. Called on spawn and again by doors
+        /// when they swap between open/closed art (which may trim differently).
+        /// </summary>
+        public void SetSprite(Sprite spr)
+        {
+            if (_sr == null || spr == null) return;
+            _sr.sprite = spr;
+
+            float s = spr.pixelsPerUnit / PixelsPerTile;
+            _sr.transform.localScale = new Vector3(s, s, 1f);
+
+            // Root sits at the footprint centre; seat the drawn content's bottom
+            // on the footprint's bottom edge, centred horizontally.
+            Bounds b = spr.bounds; // pivot-relative, unscaled
+            var desiredCenter = new Vector3(0f, -_h * 0.5f + b.extents.y * s, 0f);
+            _sr.transform.localPosition = desiredCenter - b.center * s;
+        }
+
         /// <summary>
         /// Spawns an object from an item's object data over an <c>ObjectSize</c>
         /// footprint whose bottom-left is <paramref name="bottomLeftTile"/>. The
         /// root sits at the footprint centre (unscaled, for a correct collider);
-        /// the sprite lives on a scaled child.
+        /// the sprite lives on a scaled child and renders at its natural pixel
+        /// size (16 px = 1 tile) — the footprint only defines collision/clicks.
         /// </summary>
         public static GameObject Spawn(ItemData item, Vector2Int bottomLeftTile, int sortingOrder = 6)
         {
-            Sprite spr = item.ObjectSprite;
             int w = Mathf.Max(1, item.ObjectSize.x);
             int h = Mathf.Max(1, item.ObjectSize.y);
 
             var root = new GameObject(item.DisplayName);
             root.transform.position = new Vector3(bottomLeftTile.x + w * 0.5f, bottomLeftTile.y + h * 0.5f, 0f);
 
-            // Sprite on a scaled child so the collider on the (unscaled) root is exact.
             var spriteGo = new GameObject("sprite");
             spriteGo.transform.SetParent(root.transform, false);
             var sr = spriteGo.AddComponent<SpriteRenderer>();
-            sr.sprite = spr;
             sr.sortingOrder = sortingOrder;
-            Vector2 size = spr.bounds.size;
-            float sx = size.x > 0f ? w / size.x : 1f;
-            float sy = size.y > 0f ? h / size.y : 1f;
-            spriteGo.transform.localScale = new Vector3(sx, sy, 1f);
-            Vector3 c = spr.bounds.center; // centre the sprite over the footprint (pivot-independent)
-            spriteGo.transform.localPosition = -new Vector3(c.x * sx, c.y * sy, 0f);
 
             var box = root.AddComponent<BoxCollider2D>();
             box.isTrigger = true; // clickable, but doesn't block movement
@@ -72,6 +89,10 @@ namespace Doodgy.Gameplay
             var po = root.AddComponent<PlacedObject>();
             po.Kind = item.ObjectKind;
             po.Source = item;
+            po._sr = sr;
+            po._w = w;
+            po._h = h;
+            po.SetSprite(item.ObjectSprite);
 
             // Kind-specific behaviour. Data stays in ItemData; only the behaviour
             // component is chosen here.
