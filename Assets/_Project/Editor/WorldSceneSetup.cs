@@ -107,6 +107,8 @@ namespace Doodgy.EditorTools
             var saves = playerGo.AddComponent<SaveSystem>();
             var look = playerGo.AddComponent<PlayerAppearanceRenderer>();
             var creator = playerGo.AddComponent<CharacterCreationUI>();
+            var health = playerGo.AddComponent<PlayerHealth>();
+            var healthBar = playerGo.AddComponent<HealthBarHUD>();
 
             // --- Camera (parented to player so it follows) -------------------
             Camera cam = Camera.main;
@@ -214,10 +216,15 @@ namespace Doodgy.EditorTools
                     EditorSpriteUtil.LoadSprite(AssetDatabase.GUIDToAssetPath(hairGuids[i]));
             lookSo.ApplyModifiedPropertiesWithoutUndo();
 
+            var healthBarSo = new SerializedObject(healthBar);
+            healthBarSo.FindProperty("frameSprite").objectReferenceValue = EditorSpriteUtil.LoadSprite(UI + "HealthBarFrame.aseprite");
+            healthBarSo.FindProperty("fillSprite").objectReferenceValue = EditorSpriteUtil.LoadSprite(UI + "HealthBarFill.aseprite");
+            healthBarSo.ApplyModifiedPropertiesWithoutUndo();
+
             // Gameplay is locked until the character creator's Start is pressed.
             var creatorSo = new SerializedObject(creator);
             SerializedProperty dis = creatorSo.FindProperty("disableWhileOpen");
-            var toDisable = new Behaviour[] { playerGo.GetComponent<PlayerController>(), edit, inv, backpack, craft, saves };
+            var toDisable = new Behaviour[] { playerGo.GetComponent<PlayerController>(), edit, inv, backpack, craft, saves, health };
             dis.arraySize = toDisable.Length;
             for (int i = 0; i < toDisable.Length; i++)
                 dis.GetArrayElementAtIndex(i).objectReferenceValue = toDisable[i];
