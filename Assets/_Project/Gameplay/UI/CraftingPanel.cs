@@ -28,9 +28,15 @@ namespace Doodgy.Gameplay
         private const int Width = 340;
 
         private PlayerInventory _inv;
+        private GameObject _canvas;
         private GameObject _panel;
         private RectTransform _panelRect;
         private bool _open;
+
+        private void OnDestroy()
+        {
+            if (_canvas != null) Destroy(_canvas); // no orphaned UI when the player is rebuilt
+        }
 
         private readonly List<RectTransform> _rows = new List<RectTransform>();
         private readonly List<Button> _buttons = new List<Button>();
@@ -78,6 +84,7 @@ namespace Doodgy.Gameplay
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
             canvasGo.AddComponent<GraphicRaycaster>();
+            _canvas = canvasGo;
 
             _panel = new GameObject("CraftingPanel");
             _panelRect = _panel.AddComponent<RectTransform>();

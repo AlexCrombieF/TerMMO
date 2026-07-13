@@ -19,6 +19,7 @@ namespace Doodgy.Gameplay
         [SerializeField] private int bottomMargin = 16;
 
         private PlayerInventory _inv;
+        private GameObject _canvas;
         private Image[] _frames;
         private Image[] _icons;
         private Text[] _counts;
@@ -40,6 +41,7 @@ namespace Doodgy.Gameplay
                 if (_inv.Inventory != null) _inv.Inventory.Changed -= Refresh;
                 _inv.SelectionChanged -= Refresh;
             }
+            if (_canvas != null) Destroy(_canvas); // no orphaned UI when the player is rebuilt
         }
 
         private void BuildUI()
@@ -47,6 +49,7 @@ namespace Doodgy.Gameplay
             int n = _inv.HotbarSize;
 
             var canvasGo = new GameObject("HotbarCanvas");
+            _canvas = canvasGo;
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 100;

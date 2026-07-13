@@ -106,6 +106,7 @@ namespace Doodgy.Gameplay
             if (_player != null && _player.Inventory != null)
                 _player.Inventory.Changed -= RefreshAll;
             UnbindStation();
+            if (_canvas != null) Destroy(_canvas.gameObject); // no orphaned UI
         }
 
         private void Update()

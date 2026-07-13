@@ -22,6 +22,7 @@ namespace Doodgy.Gameplay
         [SerializeField] private Vector2 screenMargin = new Vector2(18f, 18f);
 
         private PlayerHealth _health;
+        private GameObject _canvas;
         private Image _fill;
         private Text _label;
 
@@ -37,11 +38,13 @@ namespace Doodgy.Gameplay
         private void OnDestroy()
         {
             if (_health != null) _health.Changed -= Refresh;
+            if (_canvas != null) Destroy(_canvas); // no orphaned UI when the player is rebuilt
         }
 
         private void BuildUI()
         {
             var canvasGo = new GameObject("HealthCanvas");
+            _canvas = canvasGo;
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 95;

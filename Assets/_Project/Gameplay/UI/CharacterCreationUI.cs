@@ -79,6 +79,11 @@ namespace Doodgy.Gameplay
                 if (b != null) b.enabled = enabled;
         }
 
+        private void OnDestroy()
+        {
+            if (_screen != null) Destroy(_screen); // no orphaned UI when the player is rebuilt
+        }
+
         private void Confirm()
         {
             PlayerPrefs.SetString(PrefsKey, JsonUtility.ToJson(_appearance));
