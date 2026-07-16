@@ -45,6 +45,7 @@ namespace Doodgy.EditorTools
             Sprite furnaceSpr = EditorSpriteUtil.LoadSprite(Tiles + "Furnace.aseprite") ?? stoneSpr;
             Sprite ingotSpr = EditorSpriteUtil.LoadSprite(Items + "IronIngot.aseprite") ?? rawIronSpr;
             Sprite woodSwordSpr = EditorSpriteUtil.LoadSprite(Items + "WoodenSword.aseprite");
+            Sprite appleSpr = EditorSpriteUtil.LoadSprite(Items + "Apple.aseprite");
 
             // --- existing tiles (only refresh drops) ---
             TileData dirtTile = Load<TileData>(Tiles + "Tile_Dirt.asset");
@@ -76,6 +77,7 @@ namespace Doodgy.EditorTools
             ItemData itIngot = LoadOrCreate<ItemData>(Items + "Item_IronIngot.asset");
             ItemData itFurnace = LoadOrCreate<ItemData>(Items + "Item_Furnace.asset");
             ItemData itWoodSword = LoadOrCreate<ItemData>(Items + "Item_WoodenSword.asset");
+            ItemData itApple = LoadOrCreate<ItemData>(Items + "Item_Apple.asset");
 
             // --- configure items ---
             Item(itDirt,  10, "Dirt",        dirtSpr,   ItemCategory.TileBlock, 100, dirtTile);
@@ -100,6 +102,8 @@ namespace Doodgy.EditorTools
             // Weapon archetype: damage stats arrive with the combat system; the
             // item exists now so it's craftable and takes a hotbar slot.
             Item(itWoodSword, 27, "Wooden Sword", woodSwordSpr, ItemCategory.Weapon, 1, null);
+            Item(itApple, 28, "Apple", appleSpr, ItemCategory.Consumable, 100, null);
+            SetHeal(itApple, 15f); // right-click to eat
             Tool(itPick,      20, "Wooden Pickaxe", pickSpr,      ToolType.Pickaxe, 1, 2.2f, 5f);
             Tool(itAxe,       21, "Wooden Axe",     axeSpr,       ToolType.Axe,     1, 3f,   5f);
             Tool(itStonePick, 22, "Stone Pickaxe",  stonePickSpr, ToolType.Pickaxe, 2, 5f,   5f);
@@ -244,6 +248,14 @@ namespace Doodgy.EditorTools
             so.FindProperty("objectSize").vector2IntValue = new Vector2Int(w, h);
             so.FindProperty("objectKind").stringValue = kind;
             so.FindProperty("objectAltSprite").objectReferenceValue = altSprite;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(item);
+        }
+
+        private static void SetHeal(ItemData item, float amount)
+        {
+            var so = new SerializedObject(item);
+            so.FindProperty("healAmount").floatValue = amount;
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(item);
         }

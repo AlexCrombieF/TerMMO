@@ -18,6 +18,8 @@ namespace Doodgy.Gameplay
 
         private float _maxHealth = 5f;
         private Vector3 _dropPos;
+        private ItemData _bonusDrop;      // e.g. an apple from a felled tree
+        private float _bonusChance;
 
         /// <summary>Chop completion [0..1], for crack visuals.</summary>
         public float Progress01 => _maxHealth > 0f ? Mathf.Clamp01(1f - health / _maxHealth) : 0f;
@@ -36,6 +38,13 @@ namespace Doodgy.Gameplay
             requiredTool = tool;
         }
 
+        /// <summary>Optional extra drop rolled once when felled (apple chance on trees).</summary>
+        public void SetBonusDrop(ItemData item, float chance)
+        {
+            _bonusDrop = item;
+            _bonusChance = Mathf.Clamp01(chance);
+        }
+
         /// <summary>Applies chop damage; drops wood at the tree and destroys when depleted.</summary>
         public void Chop(float damage, PlayerInventory inventory)
         {
@@ -44,6 +53,8 @@ namespace Doodgy.Gameplay
 
             if (drop != null)
                 ItemPickup.Spawn(drop, dropAmount, _dropPos, inventory);
+            if (_bonusDrop != null && Random.value < _bonusChance)
+                ItemPickup.Spawn(_bonusDrop, 1, _dropPos + Vector3.up * 0.5f, inventory);
             Destroy(gameObject);
         }
     }

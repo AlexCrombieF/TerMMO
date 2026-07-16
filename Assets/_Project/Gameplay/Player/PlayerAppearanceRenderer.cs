@@ -29,6 +29,7 @@ namespace Doodgy.Gameplay
         [Header("Animation (body layer only; same canvas/pose as the idle body)")]
         [SerializeField] private Sprite[] walkFrames;
         [SerializeField] private float walkFps = 8f;
+        [SerializeField] private Sprite jumpSprite;
 
         private PlayerController _controller;
         private SpriteRenderer _fallback;   // the controller's placeholder box
@@ -163,11 +164,18 @@ namespace Doodgy.Gameplay
         // share the idle canvas/pivot, so they stay aligned with the other layers.
         private void AnimateBody()
         {
-            if (_body == null || walkFrames == null || walkFrames.Length == 0) return;
+            if (_body == null) return;
+
+            // Priority: airborne pose > walk cycle > idle.
+            if (!_controller.IsGrounded && jumpSprite != null)
+            {
+                _body.sprite = jumpSprite;
+                return;
+            }
 
             bool moving = _rb != null && Mathf.Abs(_rb.linearVelocity.x) > 0.15f
                           && _controller.IsGrounded;
-            if (moving)
+            if (moving && walkFrames != null && walkFrames.Length > 0)
             {
                 int idx = (int)(Time.time * walkFps) % walkFrames.Length;
                 _body.sprite = walkFrames[idx];

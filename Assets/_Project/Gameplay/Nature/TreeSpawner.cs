@@ -30,6 +30,9 @@ namespace Doodgy.Gameplay
         [Header("Drops")]
         [SerializeField] private ItemData woodItem;
         [SerializeField] private int woodPerSegment = 1;
+        [Tooltip("Optional bonus drop when a tree falls (apple).")]
+        [SerializeField] private ItemData bonusItem;
+        [Range(0f, 1f)] [SerializeField] private float bonusChance = 0.3f;
 
         private Transform _container;
 
@@ -120,6 +123,7 @@ namespace Doodgy.Gameplay
             var chop = tree.AddComponent<Choppable>();
             chop.Configure(woodItem, Mathf.Max(1, heightTiles / 2 * woodPerSegment),
                            heightTiles, new Vector3(cx, bottom + 1f, 0f));
+            chop.SetBonusDrop(bonusItem, bonusChance);
         }
 
         // 16 px of source art == 1 world tile (all our sprites use this scale).

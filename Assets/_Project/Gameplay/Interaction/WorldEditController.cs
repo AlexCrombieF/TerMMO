@@ -250,6 +250,18 @@ namespace Doodgy.Gameplay
             ItemStack held = inventory.Held;
             if (held.IsEmpty) return;
 
+            // Edible held item: right-click eats it (only if hurt — no waste).
+            if (held.Item.IsEdible)
+            {
+                var health = GetComponent<PlayerHealth>();
+                if (health != null && health.Current < health.Max)
+                {
+                    health.Heal(held.Item.HealAmount);
+                    inventory.ConsumeSelected(1);
+                }
+                return;
+            }
+
             if (held.Item.IsPlaceableObject) { TryPlaceObject(tile, held.Item); return; }
             if (!held.Item.IsPlaceable) return;
 

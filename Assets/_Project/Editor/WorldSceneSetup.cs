@@ -73,6 +73,7 @@ namespace Doodgy.EditorTools
             treeSo.FindProperty("canopySprite").objectReferenceValue = EditorSpriteUtil.LoadSprite(Tiles + "TreeCanopy.aseprite");
             treeSo.FindProperty("stumpSprite").objectReferenceValue = EditorSpriteUtil.LoadSprite(Tiles + "TreeStump.aseprite");
             treeSo.FindProperty("woodItem").objectReferenceValue = AssetDatabase.LoadAssetAtPath<ItemData>(Items + "Item_Wood.asset");
+            treeSo.FindProperty("bonusItem").objectReferenceValue = AssetDatabase.LoadAssetAtPath<ItemData>(Items + "Item_Apple.asset");
             treeSo.ApplyModifiedPropertiesWithoutUndo();
 
             // Surface decorations: uses every sprite dropped into Content/Decor.
@@ -202,6 +203,7 @@ namespace Doodgy.EditorTools
             lookSo.FindProperty("clothesSprite").objectReferenceValue = EditorSpriteUtil.LoadSprite(PlayerArt + "PlayerClothes.aseprite");
             lookSo.FindProperty("eyesBaseSprite").objectReferenceValue = EditorSpriteUtil.LoadSprite(PlayerArt + "PlayerEyesBase.aseprite");
             lookSo.FindProperty("eyesSprite").objectReferenceValue = EditorSpriteUtil.LoadSprite(PlayerArt + "PlayerEyes.aseprite");
+            lookSo.FindProperty("jumpSprite").objectReferenceValue = EditorSpriteUtil.LoadSprite(PlayerArt + "PlayerJump.aseprite");
             Sprite[] walkFrames = EditorSpriteUtil.LoadAllSprites(PlayerArt + "PlayerWalk.aseprite");
             SerializedProperty walkArr = lookSo.FindProperty("walkFrames");
             walkArr.arraySize = walkFrames.Length;

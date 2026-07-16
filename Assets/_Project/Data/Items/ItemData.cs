@@ -66,6 +66,10 @@ namespace Doodgy.Data
                  "(e.g. the door's OPEN art). Same canvas size as the main sprite.")]
         [SerializeField] private Sprite objectAltSprite;
 
+        [Header("Consumable (optional)")]
+        [Tooltip("HP restored when eaten/drunk (right-click while held). 0 = not edible.")]
+        [Min(0f)] [SerializeField] private float healAmount = 0f;
+
         [Header("Furnace (optional)")]
         [Tooltip("Seconds of burn time this item provides as furnace fuel. 0 = not fuel.")]
         [Min(0f)] [SerializeField] private float fuelSeconds = 0f;
@@ -94,6 +98,8 @@ namespace Doodgy.Data
         public string ObjectKind => objectKind;
         public Sprite ObjectAltSprite => objectAltSprite;
         public bool IsPlaceableObject => objectSprite != null && !string.IsNullOrEmpty(objectKind);
+        public float HealAmount => healAmount;
+        public bool IsEdible => healAmount > 0f;
         public float FuelSeconds => fuelSeconds;
         public ItemData SmeltsInto => smeltsInto;
         public float SmeltSeconds => smeltSeconds;
