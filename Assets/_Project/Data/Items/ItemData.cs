@@ -66,6 +66,13 @@ namespace Doodgy.Data
                  "(e.g. the door's OPEN art). Same canvas size as the main sprite.")]
         [SerializeField] private Sprite objectAltSprite;
 
+        [Header("Weapon stats (optional — used when Category is Weapon)")]
+        [Min(0f)] [SerializeField] private float weaponDamage = 0f;
+        [Tooltip("Knockback impulse applied to enemies hit.")]
+        [Min(0f)] [SerializeField] private float weaponKnockback = 5f;
+        [Tooltip("Seconds between swings.")]
+        [Min(0.05f)] [SerializeField] private float attackCooldown = 0.45f;
+
         [Header("Consumable (optional)")]
         [Tooltip("HP restored when eaten/drunk (right-click while held). 0 = not edible.")]
         [Min(0f)] [SerializeField] private float healAmount = 0f;
@@ -100,6 +107,9 @@ namespace Doodgy.Data
         public bool IsPlaceableObject => objectSprite != null && !string.IsNullOrEmpty(objectKind);
         public float HealAmount => healAmount;
         public bool IsEdible => healAmount > 0f;
+        public float WeaponDamage => weaponDamage;
+        public float WeaponKnockback => weaponKnockback;
+        public float AttackCooldown => attackCooldown;
         public float FuelSeconds => fuelSeconds;
         public ItemData SmeltsInto => smeltsInto;
         public float SmeltSeconds => smeltSeconds;

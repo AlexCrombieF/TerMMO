@@ -23,6 +23,7 @@ namespace Doodgy.EditorTools
         public static void Build()
         {
             EnsureFolder("Recipes");
+            EnsureFolder("Enemies");
 
             // --- sprites (some may be null until art is added; placeholders cover it) ---
             Sprite dirtSpr = EditorSpriteUtil.LoadSprite(Tiles + "Dirt.aseprite");
@@ -102,6 +103,7 @@ namespace Doodgy.EditorTools
             // Weapon archetype: damage stats arrive with the combat system; the
             // item exists now so it's craftable and takes a hotbar slot.
             Item(itWoodSword, 27, "Wooden Sword", woodSwordSpr, ItemCategory.Weapon, 1, null);
+            SetWeapon(itWoodSword, damage: 8f, knockback: 6f);
             Item(itApple, 28, "Apple", appleSpr, ItemCategory.Consumable, 100, null);
             SetHeal(itApple, 15f); // right-click to eat
             Tool(itPick,      20, "Wooden Pickaxe", pickSpr,      ToolType.Pickaxe, 1, 2.2f, 5f);
@@ -169,6 +171,25 @@ namespace Doodgy.EditorTools
                     EditorSpriteUtil.LoadSprite(Tiles + "GrassTopRight2.aseprite"),
                     EditorSpriteUtil.LoadSprite(Tiles + "GrassTopRight3.aseprite"),
                 });
+
+            // --- enemies ---
+            var rat = LoadOrCreate<EnemyData>("Assets/_Project/Content/Enemies/Enemy_CaveRat.asset");
+            var ratSo = new SerializedObject(rat);
+            ratSo.FindProperty("displayName").stringValue = "Cave Rat";
+            ratSo.FindProperty("maxHealth").floatValue = 20f;
+            ratSo.FindProperty("contactDamage").floatValue = 8f;
+            ratSo.FindProperty("moveSpeed").floatValue = 4.5f;
+            ratSo.FindProperty("aggroRange").floatValue = 9f;
+            ratSo.FindProperty("xpReward").floatValue = 10f;
+            ratSo.FindProperty("animFps").floatValue = 10f;
+            ratSo.FindProperty("aiKind").stringValue = "Scurry";
+            Sprite[] ratFrames = EditorSpriteUtil.LoadAllSprites("Assets/_Project/Content/Enemies/CaveRat.aseprite");
+            SerializedProperty rfArr = ratSo.FindProperty("frames");
+            rfArr.arraySize = ratFrames.Length;
+            for (int i = 0; i < ratFrames.Length; i++)
+                rfArr.GetArrayElementAtIndex(i).objectReferenceValue = ratFrames[i];
+            ratSo.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(rat);
 
             RegisterAllTiles();
             RegisterAllItems();
@@ -248,6 +269,15 @@ namespace Doodgy.EditorTools
             so.FindProperty("objectSize").vector2IntValue = new Vector2Int(w, h);
             so.FindProperty("objectKind").stringValue = kind;
             so.FindProperty("objectAltSprite").objectReferenceValue = altSprite;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(item);
+        }
+
+        private static void SetWeapon(ItemData item, float damage, float knockback)
+        {
+            var so = new SerializedObject(item);
+            so.FindProperty("weaponDamage").floatValue = damage;
+            so.FindProperty("weaponKnockback").floatValue = knockback;
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(item);
         }

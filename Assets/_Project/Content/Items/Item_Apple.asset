@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f70717f7d7f6764d896012f27e63d97, type: 3}
-  m_Name: Item_Furnace
+  m_Name: Item_Apple
   m_EditorClassIdentifier: 
-  id: 26
-  displayName: Furnace
+  id: 28
+  displayName: Apple
   description: 
-  icon: {fileID: -986751553351328595, guid: 3d66a10002817bc439a50976f9de1c44, type: 3}
-  category: 1
+  icon: {fileID: -3345956429371246642, guid: 955b79178b7f0cf43b00b2e3a7d0ced3, type: 3}
+  category: 6
   rarity: 0
   maxStackSize: 100
   placesTile: {fileID: 0}
@@ -24,14 +24,14 @@ MonoBehaviour:
   toolTier: 0
   miningPower: 1
   reach: 4
-  objectSprite: {fileID: -986751553351328595, guid: 3d66a10002817bc439a50976f9de1c44, type: 3}
-  objectSize: {x: 2, y: 2}
-  objectKind: Furnace
+  objectSprite: {fileID: 0}
+  objectSize: {x: 1, y: 1}
+  objectKind: 
   objectAltSprite: {fileID: 0}
   weaponDamage: 0
   weaponKnockback: 5
   attackCooldown: 0.45
-  healAmount: 0
+  healAmount: 15
   fuelSeconds: 0
   smeltsInto: {fileID: 0}
   smeltSeconds: 4

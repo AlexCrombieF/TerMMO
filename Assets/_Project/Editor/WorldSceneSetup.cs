@@ -109,6 +109,17 @@ namespace Doodgy.EditorTools
             var look = playerGo.AddComponent<PlayerAppearanceRenderer>();
             var creator = playerGo.AddComponent<CharacterCreationUI>();
             var health = playerGo.AddComponent<PlayerHealth>();
+            playerGo.AddComponent<PlayerXP>();
+            var heldDisplay = playerGo.AddComponent<HeldItemDisplay>();
+            var heldSo = new SerializedObject(heldDisplay);
+            heldSo.FindProperty("armSprite").objectReferenceValue =
+                EditorSpriteUtil.LoadSprite("Assets/_Project/Content/Player/PlayerArm.aseprite");
+            heldSo.ApplyModifiedPropertiesWithoutUndo();
+            var highlight = playerGo.AddComponent<TileHighlight>();
+            var highlightSo = new SerializedObject(highlight);
+            highlightSo.FindProperty("highlightSprite").objectReferenceValue =
+                EditorSpriteUtil.LoadSprite(FX + "BlockHighlight.aseprite");
+            highlightSo.ApplyModifiedPropertiesWithoutUndo();
             var healthBar = playerGo.AddComponent<HealthBarHUD>();
 
             // --- Camera (parented to player so it follows) -------------------
@@ -217,6 +228,16 @@ namespace Doodgy.EditorTools
                 hairArr.GetArrayElementAtIndex(i).objectReferenceValue =
                     EditorSpriteUtil.LoadSprite(AssetDatabase.GUIDToAssetPath(hairGuids[i]));
             lookSo.ApplyModifiedPropertiesWithoutUndo();
+
+            // Cave enemies: spawn in dark underground air near the player.
+            var spawner = worldGo.AddComponent<EnemySpawner>();
+            var spawnerSo = new SerializedObject(spawner);
+            spawnerSo.FindProperty("world").objectReferenceValue = world;
+            spawnerSo.FindProperty("lighting").objectReferenceValue = worldGo.GetComponent<LightingSystem>();
+            spawnerSo.FindProperty("enemyData").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<EnemyData>("Assets/_Project/Content/Enemies/Enemy_CaveRat.asset");
+            spawnerSo.FindProperty("player").objectReferenceValue = playerGo;
+            spawnerSo.ApplyModifiedPropertiesWithoutUndo();
 
             var healthBarSo = new SerializedObject(healthBar);
             healthBarSo.FindProperty("frameSprite").objectReferenceValue = EditorSpriteUtil.LoadSprite(UI + "HealthBarFrame.aseprite");

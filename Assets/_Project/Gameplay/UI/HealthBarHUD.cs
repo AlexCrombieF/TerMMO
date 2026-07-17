@@ -28,16 +28,21 @@ namespace Doodgy.Gameplay
 
         private void Awake() => _health = GetComponent<PlayerHealth>();
 
+        private PlayerXP _xp;
+
         private void Start()
         {
+            _xp = GetComponent<PlayerXP>();
             BuildUI();
             _health.Changed += Refresh;
+            if (_xp != null) _xp.Changed += Refresh;
             Refresh();
         }
 
         private void OnDestroy()
         {
             if (_health != null) _health.Changed -= Refresh;
+            if (_xp != null) _xp.Changed -= Refresh;
             if (_canvas != null) Destroy(_canvas); // no orphaned UI when the player is rebuilt
         }
 
@@ -131,8 +136,12 @@ namespace Doodgy.Gameplay
         private void Refresh()
         {
             if (_fill != null) _fill.fillAmount = _health.Fraction;
-            if (_label != null)
-                _label.text = $"{Mathf.CeilToInt(_health.Current)}/{Mathf.CeilToInt(_health.Max)}";
+            if (_label == null) return;
+
+            string text = $"{Mathf.CeilToInt(_health.Current)}/{Mathf.CeilToInt(_health.Max)}";
+            if (_xp != null)
+                text += $"\nLv {_xp.Level}  {Mathf.FloorToInt(_xp.Xp)}/{Mathf.CeilToInt(_xp.XpToNext)}";
+            _label.text = text;
         }
     }
 }

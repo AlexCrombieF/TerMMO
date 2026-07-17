@@ -59,6 +59,14 @@ namespace Doodgy.Gameplay
         }
 
         private void OnWorldGenerated() => Rebuild();
+
+        /// <summary>Light level [0..1] at a tile (1 = full daylight). 0 outside the map.</summary>
+        public float GetLight(Vector2Int tile)
+        {
+            if (_light == null || tile.x < 0 || tile.y < 0 || tile.x >= _w || tile.y >= _h)
+                return 0f;
+            return Mathf.Clamp01(_light[tile.y * _w + tile.x]);
+        }
         private void OnTileChanged(TileChangedEvent _) => _dirty = true;
 
         private void LateUpdate()

@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 62fe12ee2d464ad4d8de3f20d0c2e36e
+guid: ef4e024a064d47543be6be90f1f93f5f
 ScriptedImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -123,7 +123,7 @@ ScriptedImporter:
     tessellationDetail: 0
     uvTransform: {x: 0, y: 0}
   animatedSpriteImportData:
-  - name: DoorOpenRight
+  - name: HealthBarFrame
     originalName: 
     pivot: {x: 0.5, y: 0}
     alignment: 9
@@ -134,8 +134,8 @@ ScriptedImporter:
       x: 4
       y: 4
       width: 16
-      height: 32
-    spriteID: d6d104b4b7e99244e809a25b1b261d88
+      height: 64
+    spriteID: c74dd0d9e3670104aaede2b14569c92f
     spriteBone: []
     spriteOutline: []
     vertices: []
@@ -148,25 +148,25 @@ ScriptedImporter:
   asepriteLayers:
   - layerIndex: 0
     uuid:
-      value0: 3746322632
+      value0: 769551386
       value1: 0
       value2: 0
       value3: 0
     guid: 0
-    name: DoorOpenRight
+    name: HealthBarFrame
     layerFlags: 0
     layerType: 0
     blendMode: 0
     cells:
-    - name: DoorOpenRight
+    - name: HealthBarFrame
       frameIndex: 0
       additiveSortOrder: 0
       cellRect:
         x: 0
         y: 0
         width: 16
-        height: 32
-      spriteId: d6d104b4b7e99244e809a25b1b261d88
+        height: 64
+      spriteId: c74dd0d9e3670104aaede2b14569c92f
     linkedCells: []
     parentIndex: -1
   platformSettings:
@@ -185,5 +185,5 @@ ScriptedImporter:
   generatePhysicsShape: 0
   secondarySpriteTextures: []
   spritePackingTag: 
-  canvasSize: {x: 16, y: 32}
-  previousTextureSize: {x: 32, y: 64}
+  canvasSize: {x: 16, y: 64}
+  previousTextureSize: {x: 64, y: 128}

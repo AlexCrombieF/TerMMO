@@ -59,6 +59,21 @@ namespace Doodgy.Gameplay
         // Seeded, server-side drop rolls (deterministic / replayable).
         private System.Random _rng;
 
+        // Melee swing state.
+        private float _swingTimer;
+        private const float MeleeRange = 1.9f;   // tiles from the player's centre
+        private const float MeleeHalfHeight = 1.4f;
+
+        /// <summary>True while the held item should visibly swing (mining, chopping,
+        /// attacking). Read by HeldItemDisplay — purely visual.</summary>
+        public bool SwingActive { get; private set; }
+
+        /// <summary>Tile under the cursor this frame (valid when HoverValid).</summary>
+        public Vector2Int HoveredTile { get; private set; }
+        /// <summary>True when the hovered tile is a legitimate target: in reach and
+        /// either mineable, or empty while holding something placeable.</summary>
+        public bool HoverValid { get; private set; }
+
         private void Awake()
         {
             if (worldCamera == null) worldCamera = Camera.main;
@@ -71,6 +86,9 @@ namespace Doodgy.Gameplay
             Mouse mouse = Mouse.current;
             if (mouse == null || world == null || worldCamera == null) return;
 
+            SwingActive = false;
+            HoverValid = false;
+
             // Don't mine/place/pick through open UI (backpack, crafting panel).
             var es = UnityEngine.EventSystems.EventSystem.current;
             if (es != null && es.IsPointerOverGameObject())
@@ -81,18 +99,72 @@ namespace Doodgy.Gameplay
             }
 
             Vector2Int tile = MouseTile(mouse);
+            _swingTimer -= Time.deltaTime;
 
             // A single left-click on a placed object (workbench) picks it up.
             if (mouse.leftButton.wasPressedThisFrame && TryPickUpObject(mouse, tile))
                 return;
 
+            // Hover highlight: a solid tile you could mine, or an empty cell you
+            // could place into — always within reach.
+            HoveredTile = tile;
+            if (world.IsLoaded(tile) && InReach(tile))
+            {
+                bool solid = world.GetTile(tile) != WorldConstants.AirTileId;
+                ItemStack heldForHover = inventory != null ? inventory.Held : ItemStack.Empty;
+                bool placeable = !heldForHover.IsEmpty
+                                 && (heldForHover.Item.IsPlaceable || heldForHover.Item.IsPlaceableObject);
+                HoverValid = solid || (!solid && placeable);
+            }
+
+            // Swing visual: any tool or weapon animates while left-click is held.
+            ItemStack heldNow = inventory != null ? inventory.Held : ItemStack.Empty;
+            SwingActive = mouse.leftButton.isPressed && !heldNow.IsEmpty
+                          && (heldNow.Item.Category == ItemCategory.Tool
+                              || heldNow.Item.Category == ItemCategory.Weapon);
+
+            // Holding a weapon: left-click swings it instead of mining/chopping.
+            if (!heldNow.IsEmpty && heldNow.Item.Category == ItemCategory.Weapon)
+            {
+                ResetMining();
+                _chopTarget = null;
+                if (mouse.leftButton.isPressed) TrySwing(heldNow.Item);
+            }
             // Chopping a tree under the cursor takes precedence over tile mining.
-            if (!HandleChop(mouse, tile))
+            else if (!HandleChop(mouse, tile))
                 HandleMining(mouse, tile);
 
             // Right-click: interact with doors/chests first, otherwise place.
             if (mouse.rightButton.wasPressedThisFrame && !TryInteractObject(mouse, tile))
                 TryPlace(tile);
+        }
+
+        /// <summary>
+        /// Melee swing: hits every enemy in a box in front of the player (facing
+        /// side), applying the weapon's damage + knockback. Uses the enemy
+        /// registry rather than physics queries. Server-side under netcode.
+        /// </summary>
+        private void TrySwing(ItemData weapon)
+        {
+            if (_swingTimer > 0f) return;
+            _swingTimer = weapon.AttackCooldown;
+
+            var pc = GetComponent<PlayerController>();
+            int facing = pc != null ? pc.Facing : 1;
+            Vector3 origin = transform.position;
+
+            for (int i = Enemy.All.Count - 1; i >= 0; i--)
+            {
+                Enemy e = Enemy.All[i];
+                if (e == null) continue;
+                Vector3 d = e.transform.position - origin;
+                bool inFront = Mathf.Sign(d.x) == facing || Mathf.Abs(d.x) < 0.4f;
+                if (!inFront || Mathf.Abs(d.x) > MeleeRange || Mathf.Abs(d.y) > MeleeHalfHeight)
+                    continue;
+
+                var knock = new Vector2(facing * weapon.WeaponKnockback, weapon.WeaponKnockback * 0.6f);
+                e.TakeDamage(weapon.WeaponDamage, knock);
+            }
         }
 
         /// <summary>Right-click interactions on placed objects (door toggle, chest open).</summary>
