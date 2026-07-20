@@ -36,6 +36,11 @@ namespace Doodgy.Gameplay
         [SerializeField] private int handToolTier = 0;
         [Min(0.01f)] [SerializeField] private float handMiningPower = 2f;
 
+        [Header("Combat VFX")]
+        [SerializeField] private Sprite[] slashFrames;
+        [SerializeField] private Sprite[] hitFrames;
+        [SerializeField] private float vfxFps = 20f;
+
         // Hold-to-mine progress state.
         private Vector2Int _miningTile;
         private bool _isMining;
@@ -153,6 +158,10 @@ namespace Doodgy.Gameplay
             int facing = pc != null ? pc.Facing : 1;
             Vector3 origin = transform.position;
 
+            // Slash arc in front of the player.
+            OneShotEffect.Spawn(slashFrames, vfxFps,
+                origin + new Vector3(facing * 0.9f, 0.1f, 0f), sortingOrder: 16, flipX: facing < 0);
+
             for (int i = Enemy.All.Count - 1; i >= 0; i--)
             {
                 Enemy e = Enemy.All[i];
@@ -164,6 +173,7 @@ namespace Doodgy.Gameplay
 
                 var knock = new Vector2(facing * weapon.WeaponKnockback, weapon.WeaponKnockback * 0.6f);
                 e.TakeDamage(weapon.WeaponDamage, knock);
+                OneShotEffect.Spawn(hitFrames, vfxFps, e.transform.position, sortingOrder: 18);
             }
         }
 

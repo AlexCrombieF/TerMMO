@@ -23,6 +23,13 @@ namespace Doodgy.EditorTools
         private const string UI = "Assets/_Project/Content/UI/";
         private const string FX = "Assets/_Project/Content/FX/";
 
+        private static void AssignSprites(SerializedProperty arrayProp, Sprite[] sprites)
+        {
+            arrayProp.arraySize = sprites.Length;
+            for (int i = 0; i < sprites.Length; i++)
+                arrayProp.GetArrayElementAtIndex(i).objectReferenceValue = sprites[i];
+        }
+
         [MenuItem("Doodgy/Setup Test Scene")]
         public static void SetupTestScene()
         {
@@ -160,6 +167,8 @@ namespace Doodgy.EditorTools
             editSo.FindProperty("world").objectReferenceValue = world;
             editSo.FindProperty("worldCamera").objectReferenceValue = cam;
             editSo.FindProperty("inventory").objectReferenceValue = inv;
+            AssignSprites(editSo.FindProperty("slashFrames"), EditorSpriteUtil.LoadAllSprites(FX + "Slash.aseprite"));
+            AssignSprites(editSo.FindProperty("hitFrames"), EditorSpriteUtil.LoadAllSprites(FX + "HitPuff.aseprite"));
             editSo.ApplyModifiedPropertiesWithoutUndo();
 
             GrantStartingKit(inv);
