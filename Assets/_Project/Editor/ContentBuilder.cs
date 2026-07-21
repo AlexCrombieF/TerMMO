@@ -47,6 +47,7 @@ namespace Doodgy.EditorTools
             Sprite ingotSpr = EditorSpriteUtil.LoadSprite(Items + "IronIngot.aseprite") ?? rawIronSpr;
             Sprite woodSwordSpr = EditorSpriteUtil.LoadSprite(Items + "WoodenSword.aseprite");
             Sprite appleSpr = EditorSpriteUtil.LoadSprite(Items + "Apple.aseprite");
+            Sprite rawMeatSpr = EditorSpriteUtil.LoadSprite(Items + "RawMeat.aseprite");
 
             // --- existing tiles (only refresh drops) ---
             TileData dirtTile = Load<TileData>(Tiles + "Tile_Dirt.asset");
@@ -79,6 +80,7 @@ namespace Doodgy.EditorTools
             ItemData itFurnace = LoadOrCreate<ItemData>(Items + "Item_Furnace.asset");
             ItemData itWoodSword = LoadOrCreate<ItemData>(Items + "Item_WoodenSword.asset");
             ItemData itApple = LoadOrCreate<ItemData>(Items + "Item_Apple.asset");
+            ItemData itRawMeat = LoadOrCreate<ItemData>(Items + "Item_RawMeat.asset");
 
             // --- configure items ---
             Item(itDirt,  10, "Dirt",        dirtSpr,   ItemCategory.TileBlock, 100, dirtTile);
@@ -106,6 +108,8 @@ namespace Doodgy.EditorTools
             SetWeapon(itWoodSword, damage: 8f, knockback: 6f);
             Item(itApple, 28, "Apple", appleSpr, ItemCategory.Consumable, 100, null);
             SetHeal(itApple, 15f); // right-click to eat
+            Item(itRawMeat, 29, "Raw Meat", rawMeatSpr, ItemCategory.Consumable, 100, null);
+            SetHeal(itRawMeat, 6f); // edible raw for a little; cook in a furnace for more later
             Tool(itPick,      20, "Wooden Pickaxe", pickSpr,      ToolType.Pickaxe, 1, 2.2f, 5f);
             Tool(itAxe,       21, "Wooden Axe",     axeSpr,       ToolType.Axe,     1, 3f,   5f);
             Tool(itStonePick, 22, "Stone Pickaxe",  stonePickSpr, ToolType.Pickaxe, 2, 5f,   5f);
@@ -183,6 +187,10 @@ namespace Doodgy.EditorTools
             ratSo.FindProperty("xpReward").floatValue = 10f;
             ratSo.FindProperty("animFps").floatValue = 10f;
             ratSo.FindProperty("aiKind").stringValue = "Scurry";
+            ratSo.FindProperty("dropItem").objectReferenceValue = itRawMeat;
+            ratSo.FindProperty("dropMin").intValue = 1;
+            ratSo.FindProperty("dropMax").intValue = 2;
+            ratSo.FindProperty("dropChance").floatValue = 0.7f;
             Sprite[] ratFrames = EditorSpriteUtil.LoadAllSprites("Assets/_Project/Content/Enemies/CaveRat.aseprite");
             SerializedProperty rfArr = ratSo.FindProperty("frames");
             rfArr.arraySize = ratFrames.Length;

@@ -24,6 +24,12 @@ namespace Doodgy.Data
         public Sprite[] frames;
         [Min(0.1f)] public float animFps = 10f;
 
+        [Header("Loot")]
+        public ItemData dropItem;
+        [Min(0)] public int dropMin = 1;
+        [Min(0)] public int dropMax = 1;
+        [Range(0f, 1f)] public float dropChance = 1f;
+
         [Header("Behaviour")]
         [Tooltip("Which AI component drives it. 'Scurry' = ground chaser (rat).")]
         public string aiKind = "Scurry";

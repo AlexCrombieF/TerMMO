@@ -99,8 +99,18 @@ namespace Doodgy.Gameplay
             if (_health <= 0f)
             {
                 if (_xpTarget != null) _xpTarget.AddXP(Data.xpReward);
+                DropLoot();
                 Destroy(gameObject);
             }
+        }
+
+        private void DropLoot()
+        {
+            if (Data.dropItem == null || Random.value > Data.dropChance) return;
+            int count = Random.Range(Data.dropMin, Data.dropMax + 1);
+            if (count > 0)
+                ItemPickup.Spawn(Data.dropItem, count, transform.position,
+                                 _xpTarget != null ? _xpTarget.GetComponent<PlayerInventory>() : null);
         }
 
         private void Update()
